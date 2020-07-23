@@ -23,7 +23,7 @@ func main() {
 	// Set up options.
 	options := serial.OpenOptions{
 		PortName:        "/dev/ttyUSB0",
-		BaudRate:        19200,
+		BaudRate:        9600,
 		DataBits:        8,
 		StopBits:        1,
 		MinimumReadSize: 4,
@@ -47,19 +47,30 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": sp,
 			})
+			return
 		}
 		dp -= 2
 		bOn := 1
 		if on, ok := param["on"]; ok {
 			if len(on) > 0 {
-				if bn, err := strconv.Atoi(on[0]); err == nil {
-					bOn = bn
+				bn, err := strconv.Atoi(on[0])
+				if err != nil {
+					log.Fatal(err)
 				}
+				bOn = bn
 			}
 		}
 
 		ss := fmt.Sprintf("P%d,%d", dp, bOn)
-		port.Write([]byte(ss))
+		log.Println("Send:", ss)
+		if _, err = port.Write([]byte(ss)); err != nil {
+			c.JSON(http.StatusForbidden, gin.H{
+				"pin":    sp,
+				"status": bOn,
+				"serial": ss,
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"pin":    sp,
 			"status": bOn,
@@ -96,7 +107,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+		log.Fatalf("Server forced to shutdown: %s\n", err)
 	}
 
 	log.Println("Server exiting")
