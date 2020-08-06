@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +18,23 @@ import (
 )
 
 // var port io.ReadWriteCloser
-var powerserial SerialPort
+var (
+	powerserial SerialPort
+	FDLogger    *log.Logger
+)
+
+// Init Loger
+func Init() {
+	file, err := os.OpenFile("powermanager.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("Failed to open log file:", err)
+	}
+
+	multi := io.MultiWriter(file, os.Stdout)
+	FDLogger = log.New(multi,
+		"",
+		log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
+}
 
 // Power control power module
 func Power(c *gin.Context) {
@@ -43,7 +60,7 @@ func Power(c *gin.Context) {
 	}
 
 	ss := fmt.Sprintf("P%d,%d", dp, bOn)
-	log.Println("Send:", ss)
+	FDLogger.Println("Send:", ss)
 	if _, err = powerserial.WriteData([]byte(ss)); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{
 			"pin":    sp,
@@ -59,40 +76,32 @@ func Power(c *gin.Context) {
 	})
 }
 
-func test(c *gin.Context) {
-	var pp PositionInfo
-	if c.ShouldBindQuery(&pp) != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "OK",
-			"message": "error",
-		})
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "OK",
-		"message": pp,
-	})
+func exit(c *gin.Context) {
+	FDLogger.Println("recv Exit system command")
+	os.Exit(0)
 }
 
 func main() {
-	fmt.Println("version:20.08.06.0")
-	fmt.Println("http://ip:8010/[pinnumber]?on=[0|1]")
+	Init()
+	FDLogger.Println("version:20.08.06.0")
+	FDLogger.Println("http://ip:8010/")
 	usbserialList := USBSERIALPORTS{}
 	usbserialList.LoadConfig("calibration.json")
 	if err := usbserialList.verifyDevName(); err != nil {
-		log.Fatalf("verifyDevName %s\n", err)
+		FDLogger.Fatalf("verifyDevName %s\n", err)
 		return
 	}
 
 	powerserial := SerialPort{}
 	liftingserial := SerialPort{}
 	if err := powerserial.Open(usbserialList.serialPower, 9600); err != nil {
-		log.Fatalf("open power control fail: %s\n", err)
+		FDLogger.Fatalf("open power control fail: %s\n", err)
 		return
 	}
 	defer powerserial.Close()
 
 	if err := liftingserial.Open(usbserialList.serialLifting, 115200); err != nil {
-		log.Fatalf("open power control fail: %s\n", err)
+		FDLogger.Fatalf("open power control fail: %s\n", err)
 		return
 	}
 	defer liftingserial.Close()
@@ -117,6 +126,7 @@ func main() {
 
 	router := gin.Default()
 	router.GET("/:pin", Power)
+	router.GET("/exitsystem", exit)
 	v1 := router.Group("/lift")
 	{
 		v1.GET("/hello", hello)
@@ -140,7 +150,7 @@ func main() {
 	// it won't block the graceful shutdown handling below
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			FDLogger.Fatalf("listen: %s\n", err)
 		}
 	}()
 	// router.Run(":8010")
@@ -153,15 +163,15 @@ func main() {
 	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	FDLogger.Println("Shutting down server...")
 
 	// The context is used to inform the server it has 5 seconds to finish
 	// the request it is currently handling
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %s\n", err)
+		FDLogger.Fatalf("Server forced to shutdown: %s\n", err)
 	}
 
-	log.Println("Server exiting")
+	FDLogger.Println("Server exiting")
 }

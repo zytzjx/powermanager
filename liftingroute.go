@@ -49,6 +49,7 @@ var flipcmd *TurnFlik = NewTurnFlik("ATF")
 var turncmd *TurnFlik = NewTurnFlik("ATT")
 
 func sendSerialData(cmd string, nTimeOut int32) (string, error) {
+	FDLogger.Printf("cmd:%s, timeout:%d\n", cmd, nTimeOut)
 	if _, err := liftingserial.WriteData([]byte(cmd)); err != nil {
 		return "", err
 	}
@@ -56,6 +57,7 @@ func sendSerialData(cmd string, nTimeOut int32) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	FDLogger.Printf("cmd:%s--> resp: %s\n", cmd, resp)
 	if strings.Contains(resp, "OK\r\n") {
 		return resp, nil
 	}

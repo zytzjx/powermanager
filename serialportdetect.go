@@ -75,7 +75,7 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 		n, err := sp.serialopen.Read(buf)
 		sp.mux.Unlock()
 		if err != nil {
-			fmt.Println("Error reading from serial port: ", err)
+			FDLogger.Println("Error reading from serial port: ", err)
 			errr <- err
 			return
 		}
@@ -85,10 +85,10 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 
 	select {
 	case strResp := <-resp:
-		fmt.Println(strResp)
+		FDLogger.Println(strResp)
 		return strResp, nil
 	case errret := <-err:
-		fmt.Println(errret)
+		FDLogger.Println(errret)
 		return "", errret
 	case <-time.After(time.Duration(nTimeout) * time.Second):
 		return "", errors.New("recv data timeout")
@@ -128,10 +128,10 @@ func (usp *USBSERIALPORTS) GetDevUsbList() error {
 	cmd := "ls -l /dev/ttyUSB*"
 	out, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
-		fmt.Printf("Failed to execute command: %s, %s\n", cmd, err)
+		FDLogger.Printf("Failed to execute command: %s, %s\n", cmd, err)
 		return err
 	}
-	fmt.Printf("result execute command: %s, %s\n", cmd, string(out))
+	FDLogger.Printf("result execute command: %s, %s\n", cmd, string(out))
 	re := regexp.MustCompile(`/dev/ttyUSB\d+`)
 	ss := string(out)
 	usp.ttyUSB = re.FindAllString(ss, -1)
@@ -145,7 +145,7 @@ func (usp *USBSERIALPORTS) getDevUsbInfo(devName string) (string, string, error)
 	fmt.Println(cmd)
 	out, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
-		fmt.Printf("Failed to execute command: %s\n", err)
+		FDLogger.Printf("Failed to execute command: %s\n", err)
 		return "", "", err
 	}
 	//fmt.Println(string(out))
@@ -161,10 +161,10 @@ func (usp *USBSERIALPORTS) getDevUsbInfo(devName string) (string, string, error)
 			case "busnum":
 				busnum = nums[1]
 			default:
-				fmt.Println("out put error, the result is not aspect.")
+				FDLogger.Println("out put error, the result is not aspect.")
 			}
 		} else {
-			fmt.Printf("output data format, the result is not aspect. %s\n", x)
+			FDLogger.Printf("output data format, the result is not aspect. %s\n", x)
 		}
 
 	}
@@ -179,14 +179,16 @@ func (usp *USBSERIALPORTS) verifyDevName() error {
 	for _, s := range usp.ttyUSB {
 		devnum, busnum, err := usp.getDevUsbInfo(s)
 		if err != nil {
-			fmt.Printf("error: %s\n", err)
+			FDLogger.Printf("error: %s\n", err)
 			continue
 		}
 		sstart := fmt.Sprintf("Bus %s Device %s: ID", busnum, devnum)
 		if strings.HasPrefix(usp.Power, sstart) {
 			usp.serialPower = s
+			FDLogger.Printf("found power serial: %s\n", s)
 		} else if strings.HasPrefix(usp.Lifting, sstart) {
 			usp.serialLifting = s
+			FDLogger.Printf("found lifting serial: %s\n", s)
 		}
 	}
 	return nil
