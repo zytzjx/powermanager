@@ -13,7 +13,7 @@ http://localhost:8010/11?on=0
  sudo usermod -a -G tty $USER
  reboot
 ```
-
+curl -H "Content-Type: application/json" -d '{"name":"xyz","password":"xyz"}' http://localhost:8010/exitsystem
 
 if two usb device. now need calibration file  
 calibration.json

@@ -10,11 +10,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jxskiss/ginregex"
 )
 
 // var port io.ReadWriteCloser
@@ -39,7 +41,8 @@ func Init() {
 // Power control power module
 func Power(c *gin.Context) {
 	param := c.Request.URL.Query()
-	sp := c.Param("pin")
+	re := regexp.MustCompile(`\d+`)
+	sp := re.FindString(c.Request.URL.Path)
 	dp, err := strconv.Atoi(sp)
 	if err != nil || dp < 2 || dp > 13 {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -78,7 +81,27 @@ func Power(c *gin.Context) {
 
 func exit(c *gin.Context) {
 	FDLogger.Println("recv Exit system command")
+	type ExitSystem struct {
+		Username string `json:"name" binding:"required"`
+		Password string `json:"password"`
+	}
+	var exitsystem ExitSystem
+	if err := c.BindJSON(&exitsystem); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+		return
+	}
 	os.Exit(0)
+}
+
+// HomePage info
+func HomePage(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"version":       "20.08.06.0",
+		"design":        "jefferyzhang",
+		"requestHeader": c.Request.Header,
+	})
 }
 
 func main() {
@@ -86,7 +109,7 @@ func main() {
 	FDLogger.Println("version:20.08.06.0")
 	FDLogger.Println("http://ip:8010/")
 	usbserialList := USBSERIALPORTS{}
-	usbserialList.LoadConfig("calibration.json")
+	usbserialList.LoadConfig("serialcalibration.json")
 	if err := usbserialList.verifyDevName(); err != nil {
 		FDLogger.Fatalf("verifyDevName %s\n", err)
 		return
@@ -94,39 +117,24 @@ func main() {
 
 	powerserial := SerialPort{}
 	liftingserial := SerialPort{}
-	if err := powerserial.Open(usbserialList.serialPower, 9600); err != nil {
-		FDLogger.Fatalf("open power control fail: %s\n", err)
-		return
+	if usbserialList.serialPower != "" {
+		if err := powerserial.Open(usbserialList.serialPower, 9600); err != nil {
+			FDLogger.Fatalf("open power control fail: %s\n", err)
+			return
+		}
+		defer powerserial.Close()
 	}
-	defer powerserial.Close()
-
-	if err := liftingserial.Open(usbserialList.serialLifting, 115200); err != nil {
-		FDLogger.Fatalf("open power control fail: %s\n", err)
-		return
+	if usbserialList.serialLifting != "" {
+		if err := liftingserial.Open(usbserialList.serialLifting, 115200); err != nil {
+			FDLogger.Fatalf("open power control fail: %s\n", err)
+			return
+		}
+		defer liftingserial.Close()
 	}
-	defer liftingserial.Close()
-
-	// // Set up options.
-	// options := serial.OpenOptions{
-	// 	PortName:        "/dev/ttyUSB0",
-	// 	BaudRate:        9600,
-	// 	DataBits:        8,
-	// 	StopBits:        1,
-	// 	MinimumReadSize: 4,
-	// }
-
-	// // Open the port.
-	// port, err := serial.Open(options)
-	// if err != nil {
-	// 	log.Fatalf("serial.Open: %v", err)
-	// }
-
-	// // Make sure to close it later.
-	// defer port.Close()
 
 	router := gin.Default()
-	router.GET("/:pin", Power)
-	router.GET("/exitsystem", exit)
+	router.GET("/", HomePage)
+	router.POST("/exitsystem", exit)
 	v1 := router.Group("/lift")
 	{
 		v1.GET("/hello", hello)
@@ -141,6 +149,9 @@ func main() {
 		v1.GET("/turn", turn)
 		v1.GET("/setpos", setPoisition)
 	}
+	regexRouter := ginregex.New(router, nil)
+	regexRouter.GET("/\\d+", Power)
+
 	srv := &http.Server{
 		Addr:    ":8010",
 		Handler: router,

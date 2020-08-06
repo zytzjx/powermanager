@@ -108,7 +108,7 @@ type USBSERIALPORTS struct {
 // LoadConfig load config from config file
 func (usp *USBSERIALPORTS) LoadConfig(filename string) error {
 	if filename == "" {
-		filename = "calibration.json"
+		filename = "serialcalibration.json"
 	}
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
