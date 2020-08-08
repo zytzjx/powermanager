@@ -15,11 +15,48 @@ http://localhost:8010/11?on=0
 ```
 curl -H "Content-Type: application/json" -d '{"name":"xyz","password":"xyz"}' http://localhost:8010/exitsystem
 
+```
+lsusb -t
+/:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 5000M
+/:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/14p, 480M
+    |__ Port 1: Dev 11, If 0, Class=Vendor Specific Class, Driver=ch341, 12M
+    |__ Port 2: Dev 2, If 0, Class=Vendor Specific Class, Driver=mt76x0u, 480M
+    |__ Port 4: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 4: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 6: Dev 14, If 0, Class=Vendor Specific Class, Driver=ch341, 12M
+    |__ Port 7: Dev 6, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 7: Dev 6, If 1, Class=Wireless, Driver=btusb, 12M
+    |__ Port 8: Dev 5, If 0, Class=Vendor Specific Class, Driver=rtsx_usb, 480M
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/2p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/2p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
+
+lsusb -t
+/:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 5000M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 5000M
+        |__ Port 1: Dev 3, If 0, Class=Hub, Driver=hub/4p, 5000M
+/:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/14p, 480M
+    |__ Port 1: Dev 25, If 0, Class=Hub, Driver=hub/4p, 480M
+        |__ Port 4: Dev 27, If 0, Class=Vendor Specific Class, Driver=ch341, 12M
+        |__ Port 1: Dev 26, If 0, Class=Hub, Driver=hub/4p, 480M
+    |__ Port 2: Dev 2, If 0, Class=Vendor Specific Class, Driver=mt76x0u, 480M
+    |__ Port 4: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 4: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 6: Dev 14, If 0, Class=Vendor Specific Class, Driver=ch341, 12M
+    |__ Port 7: Dev 6, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 7: Dev 6, If 1, Class=Wireless, Driver=btusb, 12M
+    |__ Port 8: Dev 5, If 0, Class=Vendor Specific Class, Driver=rtsx_usb, 480M
+/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/2p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M
+/:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/2p, 480M
+    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
+```
 if two usb device. now need calibration file  
 calibration.json
 ```
 {
-   "power":"Bus 003 Device 007: ID 1a86:7523 QinHeng Electronics HL-340 USB-Serial adapter",
+   "power":"3/1",
    "lifting":"Bus 003 Device 008: ID 1a86:7523 QinHeng Electronics HL-340 USB-Serial adapter"
 }
 ```

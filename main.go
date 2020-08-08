@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"regexp"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 
 // var port io.ReadWriteCloser
 var (
-	powerserial SerialPort
+	powerserial *SerialPort
 	FDLogger    *log.Logger
 )
 
@@ -115,8 +116,8 @@ func main() {
 		return
 	}
 
-	powerserial := SerialPort{}
-	liftingserial := SerialPort{}
+	powerserial = &SerialPort{mux: &sync.Mutex{}}
+	liftingserial = &SerialPort{mux: &sync.Mutex{}}
 	if usbserialList.serialPower != "" {
 		if err := powerserial.Open(usbserialList.serialPower, 9600); err != nil {
 			FDLogger.Fatalf("open power control fail: %s\n", err)
@@ -124,8 +125,8 @@ func main() {
 		}
 		defer powerserial.Close()
 	}
-	if usbserialList.serialLifting != "" {
-		if err := liftingserial.Open(usbserialList.serialLifting, 115200); err != nil {
+	if usbserialList.serialLifting != "" { // 115200 lifting,
+		if err := liftingserial.Open(usbserialList.serialLifting, 9600); err != nil {
 			FDLogger.Fatalf("open power control fail: %s\n", err)
 			return
 		}

@@ -11,6 +11,7 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -39,7 +40,7 @@ func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 	}
 	sp.portname = PortName
 	sp.baudrate = BaudRate
-	sp.mux = &sync.Mutex{}
+
 	// Open the port.
 	port, err := serial.Open(options)
 	if err != nil {
@@ -71,15 +72,23 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 	err := make(chan error)
 	go func(resp chan string, errr chan error) {
 		buf := make([]byte, 4096)
-		sp.mux.Lock()
-		n, err := sp.serialopen.Read(buf)
-		sp.mux.Unlock()
-		if err != nil {
-			FDLogger.Println("Error reading from serial port: ", err)
-			errr <- err
-			return
+		cnt := 0
+		for {
+			sp.mux.Lock()
+			n, err := sp.serialopen.Read(buf[cnt:])
+			sp.mux.Unlock()
+			if err != nil {
+				FDLogger.Println("Error reading from serial port: ", err)
+				errr <- err
+				return
+			}
+			cnt += n
+			if bytes.Contains(buf, []byte("OK\r\n")) || bytes.Contains(buf, []byte("ERROR")) {
+				break
+			}
 		}
-		resp <- string(buf[:n])
+
+		resp <- string(buf[:cnt])
 
 	}(resp, err)
 
@@ -105,8 +114,26 @@ type USBSERIALPORTS struct {
 	ttyUSB        []string
 }
 
+func (usp *USBSERIALPORTS) getDevBus(path string) (int, int, error) {
+	pathes := strings.Split(path, "/")
+	if len(pathes) < 2 {
+		return 0, 0, errors.New("usb device is not BUS. one is BUS")
+	}
+	var nDev int
+	busindex, err := strconv.Atoi(pathes[0])
+	if err != nil {
+		return 0, 0, err
+	}
+	nDev, err = usbview.GetDevFromPathes(pathes)
+	if err != nil {
+		return 0, 0, err
+	}
+	return busindex, nDev, nil
+}
+
 // LoadConfig load config from config file
 func (usp *USBSERIALPORTS) LoadConfig(filename string) error {
+	RunLsusb()
 	if filename == "" {
 		filename = "serialcalibration.json"
 	}
@@ -176,20 +203,40 @@ func (usp *USBSERIALPORTS) verifyDevName() error {
 	if err := usp.GetDevUsbList(); err != nil {
 		return err
 	}
+	powerbus, powerdev, err := usp.getDevBus(usp.Power)
+	if err != nil {
+		FDLogger.Printf("power parser error: %s\n", err)
+		return err
+	}
+	liftbus, liftdev, err := usp.getDevBus(usp.Lifting)
+	if err != nil {
+		FDLogger.Printf("lift parser error: %s\n", err)
+		return err
+	}
+
 	for _, s := range usp.ttyUSB {
 		devnum, busnum, err := usp.getDevUsbInfo(s)
 		if err != nil {
 			FDLogger.Printf("error: %s\n", err)
 			continue
 		}
-		sstart := fmt.Sprintf("Bus %s Device %s: ID", busnum, devnum)
-		if strings.HasPrefix(usp.Power, sstart) {
+		nbusnum, _ := strconv.Atoi(busnum)
+		ndevnum, _ := strconv.Atoi(devnum)
+		if nbusnum == powerbus && ndevnum == powerdev {
 			usp.serialPower = s
 			FDLogger.Printf("found power serial: %s\n", s)
-		} else if strings.HasPrefix(usp.Lifting, sstart) {
+		} else if nbusnum == liftbus && ndevnum == liftdev {
 			usp.serialLifting = s
 			FDLogger.Printf("found lifting serial: %s\n", s)
 		}
+		// sstart := fmt.Sprintf("Bus %s Device %s: ID", busnum, devnum)
+		// if strings.HasPrefix(usp.Power, sstart) {
+		// 	usp.serialPower = s
+		// 	FDLogger.Printf("found power serial: %s\n", s)
+		// } else if strings.HasPrefix(usp.Lifting, sstart) {
+		// 	usp.serialLifting = s
+		// 	FDLogger.Printf("found lifting serial: %s\n", s)
+		// }
 	}
 	return nil
 }

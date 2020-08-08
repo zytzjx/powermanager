@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var liftingserial SerialPort
+var liftingserial *SerialPort
 
 // TurnFlik record flik
 type TurnFlik struct {
@@ -98,7 +98,7 @@ func status(c *gin.Context) {
 
 func information(c *gin.Context) {
 	cmd := "ATI\r"
-	resp, err := sendSerialData(cmd, 1)
+	resp, err := sendSerialData(cmd, 6)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err,
