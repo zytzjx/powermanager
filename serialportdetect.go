@@ -117,7 +117,7 @@ type USBSERIALPORTS struct {
 }
 
 func (usp *USBSERIALPORTS) getDevBus(path string) (int, int, error) {
-	pathes := strings.Split(path, "/")
+	pathes := strings.Split(path, "-")
 	if len(pathes) < 2 {
 		return 0, 0, errors.New("usb device is not BUS. one is BUS")
 	}
@@ -135,7 +135,7 @@ func (usp *USBSERIALPORTS) getDevBus(path string) (int, int, error) {
 
 // LoadConfig load config from config file
 func (usp *USBSERIALPORTS) LoadConfig(filename string) error {
-	RunLsusb()
+	// RunLsusb()
 	if filename == "" {
 		filename = "serialcalibration.json"
 	}
@@ -165,6 +165,24 @@ func (usp *USBSERIALPORTS) GetDevUsbList() error {
 	ss := string(out)
 	usp.ttyUSB = re.FindAllString(ss, -1)
 	return nil
+}
+
+// getDeviceLocationpath get device path
+func (usp *USBSERIALPORTS) getDeviceLocationpath(devName string) (string, error) {
+	cmd := `udevadm info -q path -n %s`
+	cmd = fmt.Sprintf(cmd, devName)
+	fmt.Println(cmd)
+	out, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		FDLogger.Printf("Failed to execute command: %s\n", err)
+		return "", err
+	}
+	re := regexp.MustCompile(".*/(.*?)/(.*?):.*?/ttyUSB\\d+/")
+	pathes := re.FindStringSubmatch(string(out))
+	if len(pathes) > 2 {
+		return pathes[1], nil
+	}
+	return "", fmt.Errorf("path return is: %s", string(out))
 }
 
 func (usp *USBSERIALPORTS) getDevUsbInfo(devName string) (string, string, error) {
@@ -199,6 +217,29 @@ func (usp *USBSERIALPORTS) getDevUsbInfo(devName string) (string, string, error)
 	}
 
 	return devnum, busnum, nil
+}
+
+// VerifyDevName from location path
+func (usp *USBSERIALPORTS) VerifyDevName() error {
+	if err := usp.GetDevUsbList(); err != nil {
+		return err
+	}
+	for _, s := range usp.ttyUSB {
+		locpath, err := usp.getDeviceLocationpath(s)
+		if err != nil {
+			FDLogger.Println(err)
+			continue
+		}
+		locpath = strings.Replace(locpath, ".", "-", -1)
+		if locpath == usp.Power {
+			usp.serialPower = s
+			FDLogger.Printf("found power serial: %s\n", s)
+		} else if locpath == usp.Lifting {
+			usp.serialLifting = s
+			FDLogger.Printf("found lifting serial: %s\n", s)
+		}
+	}
+	return nil
 }
 
 func (usp *USBSERIALPORTS) verifyDevName() error {

@@ -128,7 +128,7 @@ func (uv *USBVIEW) GetDevFromPath(path string) (int, error) {
 	if path == "" {
 		return 0, errors.New("path is empty")
 	}
-	pathes := strings.Split(path, "/")
+	pathes := strings.Split(path, "-")
 	if len(pathes) < 2 {
 		return 0, errors.New("usb device is not BUS. one is BUS")
 	}

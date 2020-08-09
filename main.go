@@ -111,7 +111,7 @@ func main() {
 	FDLogger.Println("http://ip:8010/")
 	usbserialList := USBSERIALPORTS{}
 	usbserialList.LoadConfig("serialcalibration.json")
-	if err := usbserialList.verifyDevName(); err != nil {
+	if err := usbserialList.VerifyDevName(); err != nil {
 		FDLogger.Fatalf("verifyDevName %s\n", err)
 		return
 	}

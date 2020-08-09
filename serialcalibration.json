@@ -1,6 +1,6 @@
 {
-    "power":"3/1",
+    "power":"3-1",
     "powerbaudrate":9600,
-    "lifting":"3/6",
+    "lifting":"3-6",
     "liftingbaudrate":9600
  }
