@@ -33,7 +33,7 @@ func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 	sp.IsOpened = false
 	options := serial.OpenOptions{
 		PortName:        PortName,
-		BaudRate:        9600,
+		BaudRate:        uint(BaudRate),
 		DataBits:        8,
 		StopBits:        1,
 		MinimumReadSize: 4,
@@ -106,8 +106,10 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 
 // USBSERIALPORTS serial ports configs
 type USBSERIALPORTS struct {
-	Power   string `json:"power"`
-	Lifting string `json:"lifting"`
+	Power     string `json:"power"`
+	Lifting   string `json:"lifting"`
+	PBaudRate int    `json:"powerbaudrate"`
+	LBaudRate int    `json:"liftingbaudrate"`
 
 	serialPower   string
 	serialLifting string

@@ -119,14 +119,14 @@ func main() {
 	powerserial = &SerialPort{mux: &sync.Mutex{}}
 	liftingserial = &SerialPort{mux: &sync.Mutex{}}
 	if usbserialList.serialPower != "" {
-		if err := powerserial.Open(usbserialList.serialPower, 9600); err != nil {
+		if err := powerserial.Open(usbserialList.serialPower, usbserialList.PBaudRate); err != nil {
 			FDLogger.Fatalf("open power control fail: %s\n", err)
 			return
 		}
 		defer powerserial.Close()
 	}
 	if usbserialList.serialLifting != "" { // 115200 lifting,
-		if err := liftingserial.Open(usbserialList.serialLifting, 9600); err != nil {
+		if err := liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate); err != nil {
 			FDLogger.Fatalf("open power control fail: %s\n", err)
 			return
 		}
