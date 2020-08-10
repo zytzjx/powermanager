@@ -52,13 +52,15 @@ lsusb -t
 /:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/2p, 480M
     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
 ```
-if two usb device. now need calibration file  
+
 calibration.json
 ```
 {
-   "power":"3/1",
-   "lifting":"Bus 003 Device 008: ID 1a86:7523 QinHeng Electronics HL-340 USB-Serial adapter"
-}
+    "power":"3-1",
+    "powerbaudrate":9600,
+    "lifting":"3-6",
+    "liftingbaudrate":9600
+ }
 ```
 
 ### lifting control
