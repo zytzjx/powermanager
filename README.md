@@ -53,7 +53,7 @@ lsusb -t
     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
 ```
 
-calibration.json
+serialcalibration.json
 ```
 {
     "power":"3-1",
@@ -105,3 +105,15 @@ shut down server
 
 
 
+### Note
+if not find config json file:    
+|serialport|ch340|other|result|
+|------|------|------|---|
+|1|yes|no|control LED|
+|1|no|yes|control lifting|
+|2|yes|yes|Led and Lifting|
+|2|yes|no|last serial LED|
+|2|no|yes|last serial lifting|
+|>2|any|any|need config json|
+
+if lifting PID VID defined, software will be enhanced.

@@ -46,3 +46,12 @@ func TestVerifyDevName(t *testing.T) {
 	AssertNotEqual(t, usbserialList.serialLifting, "")
 	AssertNotEqual(t, usbserialList.serialPower, "")
 }
+
+func TestDevsInfo(t *testing.T) {
+	Init()
+	infos, err := DevsInfo("/dev/ttyUSB0")
+	if err != nil {
+		t.Error(err)
+	}
+	AssertNotEqual(t, len(infos), 0)
+}

@@ -110,10 +110,13 @@ func main() {
 	FDLogger.Println("version:20.08.06.0")
 	FDLogger.Println("http://ip:8010/")
 	usbserialList := USBSERIALPORTS{}
-	usbserialList.LoadConfig("serialcalibration.json")
-	if err := usbserialList.VerifyDevName(); err != nil {
-		FDLogger.Fatalf("verifyDevName %s\n", err)
-		return
+	if usbserialList.LoadConfig("serialcalibration.json") == nil {
+		if err := usbserialList.VerifyDevName(); err != nil {
+			FDLogger.Fatalf("verifyDevName %s\n", err)
+			return
+		}
+	} else {
+		usbserialList.LoadUSBDevsWithoutConfig()
 	}
 
 	powerserial = &SerialPort{mux: &sync.Mutex{}}

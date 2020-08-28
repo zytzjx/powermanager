@@ -151,6 +151,74 @@ func (usp *USBSERIALPORTS) LoadConfig(filename string) error {
 	return nil
 }
 
+// DevsInfo get Device name information
+func DevsInfo(DevName string) (map[string]string, error) {
+	infos := map[string]string{}
+	cmd := fmt.Sprintf("udevadm info -n %s", DevName)
+	out, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		FDLogger.Printf("Failed to execute command: %s, %s\n", cmd, err)
+		return infos, err
+	}
+	FDLogger.Printf("result execute command: %s, %s\n", cmd, string(out))
+	scanner := bufio.NewScanner(bytes.NewReader(out))
+	re := regexp.MustCompile(`^.: (.*?)=(.*)$`)
+	for scanner.Scan() {
+		x := scanner.Text()
+		substr := re.FindStringSubmatch(x)
+		if len(substr) == 3 {
+			infos[substr[1]] = substr[2]
+		}
+	}
+	return infos, nil
+}
+
+// LoadUSBDevsWithoutConfig if not found USB config
+func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfig() error {
+	if err := usp.GetDevUsbList(); err != nil {
+		return err
+	}
+	if len(usp.ttyUSB) == 0 {
+		return errors.New("not find ttyUSB serial port")
+	}
+	// 1 or 2 USB
+	if len(usp.ttyUSB) < 3 {
+		for _, devname := range usp.ttyUSB {
+			infos, err := DevsInfo(devname)
+			if err != nil {
+				return err
+			}
+			var bch340Vid, bch340Pid bool
+			var bVid, bPid bool
+			if vid, ok := infos["ID_VENDOR_ID"]; ok {
+				if vid == "1a86" {
+					bch340Vid = true
+				} else {
+					bVid = true
+				}
+			}
+			if pid, ok := infos["ID_MODEL_ID"]; ok {
+				if pid == "7523" {
+					bch340Pid = true
+				} else {
+					bPid = true
+				}
+			}
+			if bch340Vid && bch340Pid {
+				usp.Power = devname
+				usp.PBaudRate = 9600
+			}
+			if bVid && bPid {
+				usp.Lifting = devname
+				usp.LBaudRate = 115200
+			}
+		}
+	} else {
+		return errors.New("too much USB Serial ports are found")
+	}
+	return nil
+}
+
 //GetDevUsbList List ttyUSB* in System
 func (usp *USBSERIALPORTS) GetDevUsbList() error {
 	// return string(out)
