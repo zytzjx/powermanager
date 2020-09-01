@@ -41,6 +41,7 @@ func Init() {
 
 // Power control power module
 func Power(c *gin.Context) {
+	FDLogger.Println("power ++")
 	param := c.Request.URL.Query()
 	re := regexp.MustCompile(`\d+`)
 	sp := re.FindString(c.Request.URL.Path)
@@ -49,6 +50,7 @@ func Power(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": sp,
 		})
+		FDLogger.Println("power --")
 		return
 	}
 	dp -= 2
@@ -71,6 +73,7 @@ func Power(c *gin.Context) {
 			"status": bOn,
 			"serial": ss,
 		})
+		FDLogger.Println("power --")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -78,6 +81,7 @@ func Power(c *gin.Context) {
 		"status": bOn,
 		"serial": ss,
 	})
+	FDLogger.Println("power --")
 }
 
 func exit(c *gin.Context) {
