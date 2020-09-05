@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -280,6 +281,9 @@ func turn(c *gin.Context) {
 		})
 		return
 	}
+
+	time.Sleep(200 * time.Microsecond)
+
 	cmd := "ATT%s\r"
 	value := c.DefaultQuery("flag", "+")
 	switch value {

@@ -81,9 +81,12 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 		buf := make([]byte, 4096)
 		cnt := 0
 		for {
-			sp.mux.Lock()
-			n, err := sp.serialopen.Read(buf[cnt:])
-			sp.mux.Unlock()
+			n, err := func() (int, error) {
+				sp.mux.Lock()
+				defer sp.mux.Unlock()
+				return sp.serialopen.Read(buf[cnt:])
+			}()
+
 			if err != nil {
 				FDLogger.Println("Error reading from serial port: ", err)
 				errr <- err
