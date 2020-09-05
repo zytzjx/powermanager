@@ -53,7 +53,7 @@ lsusb -t
     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/6p, 480M
 ```
 
-serialcalibration.json
+serialcalibration.json, if PC only has two USB to serial port. this config can be removed.
 ```
 {
     "power":"3-1",

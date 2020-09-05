@@ -31,6 +31,7 @@ var (
 
 // Init Loger
 func Init() {
+	// os.Remove("powermanager.log")
 	file, err := os.OpenFile("powermanager.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open log file:", err)
