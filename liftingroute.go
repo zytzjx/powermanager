@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -154,7 +155,9 @@ func reset(c *gin.Context) {
 }
 
 func home(c *gin.Context) {
-	cmd := "ATC\r"
+	cmd := "ATC%s\r"
+	flag := c.DefaultQuery("flag", "1")
+	cmd = fmt.Sprintf(cmd, flag)
 	resp, err := sendSerialData(cmd, 10)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -179,7 +182,7 @@ func goposition(c *gin.Context) {
 	cmd := "ATG%d\r"
 	var pp PositionInfo
 	if c.ShouldBindQuery(&pp) == nil {
-		cmd = fmt.Sprintf("ATG%d?\n", pp.Position)
+		cmd = fmt.Sprintf("ATG%d\r", pp.Position)
 		resp, err := sendSerialData(cmd, 10)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -203,7 +206,22 @@ func goposition(c *gin.Context) {
 func setPoisition(c *gin.Context) {
 	var pp PositionInfo
 	if c.ShouldBindQuery(&pp) == nil {
-		cmd := fmt.Sprintf("ATP%d=%s\n", pp.Position, pp.Value)
+		val, err := strconv.ParseFloat(pp.Value, 64)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err,
+				"data":  fmt.Sprintf("%s is not float string", pp.Value),
+			})
+			return
+		}
+		var value string
+		if val < 0 {
+			value = fmt.Sprintf("%07.2f", val)
+		} else {
+			value = fmt.Sprintf("+%06.2f", val)
+		}
+		cmd := fmt.Sprintf("ATP%d=%s\r", pp.Position, value)
+		FDLogger.Println(cmd)
 		resp, err := sendSerialData(cmd, 1)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -227,7 +245,7 @@ func listposition(c *gin.Context) {
 	cmd := "ATP?\r"
 	var pp PositionInfo
 	if c.ShouldBindQuery(&pp) == nil {
-		cmd = fmt.Sprintf("ATP%d?\n", pp.Position)
+		cmd = fmt.Sprintf("ATP%d?\r", pp.Position)
 	}
 	resp, err := sendSerialData(cmd, 1)
 	if err != nil {
@@ -254,16 +272,16 @@ func listposition(c *gin.Context) {
 }
 
 func turn(c *gin.Context) {
-	_, err := sendSerialData("ATG0", 10)
+	_, err := sendSerialData("ATG-1\r", 10)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "go to P0 failed",
+			"message": "go to P-1 failed",
 			"error":   err,
 		})
 		return
 	}
 	cmd := "ATT%s\r"
-	value := c.Request.URL.Query().Get("flag")
+	value := c.DefaultQuery("flag", "+")
 	switch value {
 	case "+":
 		cmd = fmt.Sprintf(cmd, value)
@@ -289,16 +307,8 @@ func turn(c *gin.Context) {
 }
 
 func flip(c *gin.Context) {
-	_, err := sendSerialData("ATG0", 10)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "go to P0 failed",
-			"error":   err,
-		})
-		return
-	}
 	cmd := "ATF%s\r"
-	value := c.Request.URL.Query().Get("flag")
+	value := c.DefaultQuery("flag", "+")
 	switch value {
 	case "+":
 		cmd = fmt.Sprintf(cmd, value)

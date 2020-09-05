@@ -75,13 +75,13 @@ http://localhost:8010/lift/info
 Command: ATI
 
 http://localhost:8010/lift/position  
-http://localhost:8010/lift/position?p=[0..9]  
+http://localhost:8010/lift/position?p=[-1..9]  
 Command: ATP? or ATPn?
 
-http://localhost:8010/lift/setpos?p=[0..9]&value=+2345.1234  
+http://localhost:8010/lift/setpos?p=[-1..9]&value=+2345.1234  
 Command: ATP0=+2345.1234
 
-http://localhost:8010/lift/go?p=[0..9]  
+http://localhost:8010/lift/go?p=[-1..9]  
 Command: ATG0
 
 http://localhost:8010/lift/flip?flag=[+-]    
@@ -90,8 +90,8 @@ Command: ATF+/ATF-
 http://localhost:8010/lift/turn?flag=[+-]    
 Command: ATT+/ATT-
 
-http://localhost:8010/lift/home  
-Command: ATC  
+http://localhost:8010/lift/home?flag=[12]  
+Command: ATC1/ATC2 
 
 http://localhost:8010/lift/reset  
 Command: ATZ  

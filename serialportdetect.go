@@ -17,20 +17,23 @@ import (
 	"time"
 
 	"github.com/jacobsa/go-serial/serial"
+	// "github.com/tarm/serial"
 )
 
 // SerialPort Serial port
 type SerialPort struct {
 	serialopen io.ReadWriteCloser
-	mux        *sync.Mutex
-	portname   string
-	baudrate   int
-	IsOpened   bool
+	// serialopen *serial.Port
+	mux      *sync.Mutex
+	portname string
+	baudrate int
+	IsOpened bool
 }
 
 // Open open serial port
 func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 	sp.IsOpened = false
+	// options := &serial.Config{Name: PortName, Baud: BaudRate}
 	options := serial.OpenOptions{
 		PortName:        PortName,
 		BaudRate:        uint(BaudRate),
@@ -43,6 +46,7 @@ func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 
 	// Open the port.
 	port, err := serial.Open(options)
+	// port, err := serial.OpenPort(options)
 	if err != nil {
 		log.Fatalf("serial.Open: %v", err)
 		return err
@@ -64,6 +68,9 @@ func (sp *SerialPort) WriteData(data []byte) (int, error) {
 	sp.mux.Lock()
 	defer sp.mux.Unlock()
 	return sp.serialopen.Write(data)
+	// n, err := sp.serialopen.Write(data)
+	// sp.serialopen.Flush()
+	// return n, err
 }
 
 // ReadData read from usb port
@@ -193,23 +200,23 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfig() error {
 			if vid, ok := infos["ID_VENDOR_ID"]; ok {
 				if vid == "1a86" {
 					bch340Vid = true
-				} else {
+				} else if vid == "0403" {
 					bVid = true
 				}
 			}
 			if pid, ok := infos["ID_MODEL_ID"]; ok {
 				if pid == "7523" {
 					bch340Pid = true
-				} else {
+				} else if pid == "6001" {
 					bPid = true
 				}
 			}
 			if bch340Vid && bch340Pid {
-				usp.Power = devname
+				usp.serialPower = devname
 				usp.PBaudRate = 9600
 			}
 			if bVid && bPid {
-				usp.Lifting = devname
+				usp.serialLifting = devname
 				usp.LBaudRate = 115200
 			}
 		}

@@ -20,6 +20,9 @@ import (
 	"github.com/jxskiss/ginregex"
 )
 
+// VERSION is software version
+const VERSION = "20.09.04.0"
+
 // var port io.ReadWriteCloser
 var (
 	powerserial *SerialPort
@@ -65,7 +68,7 @@ func Power(c *gin.Context) {
 		}
 	}
 
-	ss := fmt.Sprintf("P%d,%d", dp, bOn)
+	ss := fmt.Sprintf("P%d,%d,\r", dp, bOn)
 	FDLogger.Println("Send:", ss)
 	if _, err = powerserial.WriteData([]byte(ss)); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{
@@ -103,7 +106,7 @@ func exit(c *gin.Context) {
 // HomePage info
 func HomePage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"version":       "20.08.06.0",
+		"version":       VERSION,
 		"design":        "jefferyzhang",
 		"requestHeader": c.Request.Header,
 	})
@@ -111,9 +114,12 @@ func HomePage(c *gin.Context) {
 
 func main() {
 	Init()
-	FDLogger.Println("version:20.08.06.0")
+	FDLogger.Println("version:" + VERSION)
 	FDLogger.Println("http://ip:8010/")
 	usbserialList := USBSERIALPORTS{}
+	powerserial = &SerialPort{mux: &sync.Mutex{}}
+	liftingserial = &SerialPort{mux: &sync.Mutex{}}
+
 	if usbserialList.LoadConfig("serialcalibration.json") == nil {
 		if err := usbserialList.VerifyDevName(); err != nil {
 			FDLogger.Fatalf("verifyDevName %s\n", err)
@@ -121,10 +127,12 @@ func main() {
 		}
 	} else {
 		usbserialList.LoadUSBDevsWithoutConfig()
+		powerserial.portname = usbserialList.Power
+		powerserial.baudrate = usbserialList.PBaudRate
+		liftingserial.portname = usbserialList.serialLifting
+		liftingserial.baudrate = usbserialList.LBaudRate
 	}
 
-	powerserial = &SerialPort{mux: &sync.Mutex{}}
-	liftingserial = &SerialPort{mux: &sync.Mutex{}}
 	if usbserialList.serialPower != "" {
 		if err := powerserial.Open(usbserialList.serialPower, usbserialList.PBaudRate); err != nil {
 			FDLogger.Fatalf("open power control fail: %s\n", err)
