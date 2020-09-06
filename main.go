@@ -128,7 +128,7 @@ func main() {
 		}
 	} else {
 		usbserialList.LoadUSBDevsWithoutConfig()
-		powerserial.portname = usbserialList.Power
+		powerserial.portname = usbserialList.serialPower
 		powerserial.baudrate = usbserialList.PBaudRate
 		liftingserial.portname = usbserialList.serialLifting
 		liftingserial.baudrate = usbserialList.LBaudRate
@@ -140,6 +140,9 @@ func main() {
 			return
 		}
 		defer powerserial.Close()
+	}
+	if usbserialList.serialLifting == "" {
+		usbserialList.serialLifting = "/dev/ttyS0"
 	}
 	if usbserialList.serialLifting != "" { // 115200 lifting,
 		if err := liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate); err != nil {
