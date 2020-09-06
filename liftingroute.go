@@ -156,6 +156,17 @@ func reset(c *gin.Context) {
 }
 
 func home(c *gin.Context) {
+	_, err := sendSerialData("ATG-1\r", 10)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "go to P-1 failed",
+			"error":   err,
+		})
+		return
+	}
+
+	time.Sleep(200 * time.Microsecond)
+
 	cmd := "ATC%s\r"
 	flag := c.DefaultQuery("flag", "1")
 	cmd = fmt.Sprintf(cmd, flag)
