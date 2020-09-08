@@ -67,18 +67,18 @@ func (sp *SerialPort) Close() {
 func (sp *SerialPort) WriteData(data []byte) (int, error) {
 	sp.mux.Lock()
 	defer sp.mux.Unlock()
-	FDLogger.Printf("%v\n", data)
+	// FDLogger.Printf("%v\n", data)
 	s := string(data)
 	FDLogger.Println(s)
-	for i := 0; i < len(data); i++ {
-		sp.serialopen.Write(data[i : i+1])
-		time.Sleep(1 * time.Microsecond)
-	}
-	// return sp.serialopen.Write(data)
+	// for i := 0; i < len(data); i++ {
+	// 	sp.serialopen.Write(data[i : i+1])
+	// 	time.Sleep(1 * time.Microsecond)
+	// }
+	return sp.serialopen.Write(data)
 	// n, err := sp.serialopen.Write(data)
 	// sp.serialopen.Flush()
 	// return n, err
-	return len(data), nil
+	// return len(data), nil
 }
 
 // ReadData read from usb port

@@ -166,10 +166,10 @@ func home(c *gin.Context) {
 		return
 	}
 
-	time.Sleep(200 * time.Microsecond)
+	time.Sleep(2 * time.Second)
 
 	cmd := "ATC%s\r"
-	flag := c.DefaultQuery("flag", "1")
+	flag := c.DefaultQuery("flag", "2")
 	cmd = fmt.Sprintf(cmd, flag)
 	resp, err := sendSerialData(cmd, 10)
 	if err != nil {
@@ -298,7 +298,7 @@ func turn(c *gin.Context) {
 		return
 	}
 
-	time.Sleep(200 * time.Microsecond)
+	time.Sleep(2 * time.Second)
 
 	cmd := "ATT%s\r"
 	value := c.DefaultQuery("flag", "+")
