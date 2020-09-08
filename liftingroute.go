@@ -104,7 +104,7 @@ func information(c *gin.Context) {
 	resp, err := sendSerialData(cmd, 6)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -157,16 +157,16 @@ func reset(c *gin.Context) {
 }
 
 func home(c *gin.Context) {
-	_, err := sendSerialData("ATG-1\r", 10)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "go to P-1 failed",
-			"error":   err.Error(),
-		})
-		return
-	}
+	// _, err := sendSerialData("ATG-1\r", 10)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"message": "go to P-1 failed",
+	// 		"error":   err.Error(),
+	// 	})
+	// 	return
+	// }
 
-	time.Sleep(2 * time.Second)
+	// time.Sleep(2 * time.Second)
 
 	cmd := "ATC%s\r"
 	flag := c.DefaultQuery("flag", "2")
@@ -222,7 +222,7 @@ func setPoisition(c *gin.Context) {
 		val, err := strconv.ParseFloat(pp.Value, 64)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err,
+				"error": err.Error(),
 				"data":  fmt.Sprintf("%s is not float string", pp.Value),
 			})
 			return
@@ -289,16 +289,16 @@ func listposition(c *gin.Context) {
 }
 
 func turn(c *gin.Context) {
-	_, err := sendSerialData("ATG-1\r", 10)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "go to P-1 failed",
-			"error":   err,
-		})
-		return
-	}
+	// _, err := sendSerialData("ATG-1\r", 10)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"message": "go to P-1 failed",
+	// 		"error":   err,
+	// 	})
+	// 	return
+	// }
 
-	time.Sleep(2 * time.Second)
+	// time.Sleep(2 * time.Second)
 
 	cmd := "ATT%s\r"
 	value := c.DefaultQuery("flag", "+")
