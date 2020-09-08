@@ -67,10 +67,18 @@ func (sp *SerialPort) Close() {
 func (sp *SerialPort) WriteData(data []byte) (int, error) {
 	sp.mux.Lock()
 	defer sp.mux.Unlock()
-	return sp.serialopen.Write(data)
+	FDLogger.Printf("%v\n", data)
+	s := string(data)
+	FDLogger.Println(s)
+	for i := 0; i < len(data); i++ {
+		sp.serialopen.Write(data[i : i+1])
+		time.Sleep(1 * time.Microsecond)
+	}
+	// return sp.serialopen.Write(data)
 	// n, err := sp.serialopen.Write(data)
 	// sp.serialopen.Flush()
 	// return n, err
+	return len(data), nil
 }
 
 // ReadData read from usb port
@@ -81,9 +89,10 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 		buf := make([]byte, 4096)
 		cnt := 0
 		for {
+			time.Sleep(10 * time.Microsecond)
 			n, err := func() (int, error) {
-				sp.mux.Lock()
-				defer sp.mux.Unlock()
+				// sp.mux.Lock()
+				// defer sp.mux.Unlock()
 				return sp.serialopen.Read(buf[cnt:])
 			}()
 
@@ -93,7 +102,8 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 				return
 			}
 			cnt += n
-			if bytes.Contains(buf, []byte("OK\r\n")) || bytes.Contains(buf, []byte("ERROR")) {
+			FDLogger.Println(buf[0:cnt])
+			if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
 				break
 			}
 		}

@@ -55,12 +55,13 @@ func sendSerialData(cmd string, nTimeOut int32) (string, error) {
 	if _, err := liftingserial.WriteData([]byte(cmd)); err != nil {
 		return "", err
 	}
+	time.Sleep(10 * time.Microsecond)
 	resp, err := liftingserial.ReadData(nTimeOut)
 	if err != nil {
 		return "", err
 	}
 	FDLogger.Printf("cmd:%s--> resp: %s\n", cmd, resp)
-	if strings.Contains(resp, "OK\r\n") {
+	if strings.Contains(resp, "OK\r") {
 		return resp, nil
 	}
 	return "", fmt.Errorf("not found OK: %s", resp)
@@ -71,7 +72,7 @@ func hello(c *gin.Context) {
 	resp, err := sendSerialData(cmd, 1)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -87,7 +88,7 @@ func status(c *gin.Context) {
 	resp, err := sendSerialData(cmd, 1)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -128,7 +129,7 @@ func stop(c *gin.Context) {
 	resp, err := sendSerialData(cmd, 5)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -144,7 +145,7 @@ func reset(c *gin.Context) {
 	resp, err := sendSerialData(cmd, 10)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -160,7 +161,7 @@ func home(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "go to P-1 failed",
-			"error":   err,
+			"error":   err.Error(),
 		})
 		return
 	}
@@ -173,7 +174,7 @@ func home(c *gin.Context) {
 	resp, err := sendSerialData(cmd, 10)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -198,7 +199,7 @@ func goposition(c *gin.Context) {
 		resp, err := sendSerialData(cmd, 10)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err,
+				"error": err.Error(),
 			})
 			return
 		}
@@ -234,10 +235,12 @@ func setPoisition(c *gin.Context) {
 		}
 		cmd := fmt.Sprintf("ATP%d=%s\r", pp.Position, value)
 		FDLogger.Println(cmd)
-		resp, err := sendSerialData(cmd, 1)
+		FDLogger.Printf("len=%d\n", len(cmd))
+		// cmd = "ATP6=+370.00\r"
+		resp, err := sendSerialData(cmd, 3)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err,
+				"error": err.Error(),
 			})
 			return
 		}
@@ -256,13 +259,15 @@ func setPoisition(c *gin.Context) {
 func listposition(c *gin.Context) {
 	cmd := "ATP?\r"
 	var pp PositionInfo
-	if c.ShouldBindQuery(&pp) == nil {
-		cmd = fmt.Sprintf("ATP%d?\r", pp.Position)
+	if c.Query("p") != "" {
+		if c.ShouldBindQuery(&pp) == nil {
+			cmd = fmt.Sprintf("ATP%d?\r", pp.Position)
+		}
 	}
-	resp, err := sendSerialData(cmd, 1)
+	resp, err := sendSerialData(cmd, 3)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -310,7 +315,7 @@ func turn(c *gin.Context) {
 	resp, err := sendSerialData(cmd, 10)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
