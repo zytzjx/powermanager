@@ -99,6 +99,10 @@ Command: ATZ
 http://localhost:8010/lift/stop  
 Command: ATSTOP    
 
+http://localhost:8010/lift/reconnect  
+reconnect serial . close and reopen
+
+
 http://localhost:8010/exitsystem  
 shut down server  
 

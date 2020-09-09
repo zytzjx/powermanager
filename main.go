@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "20.09.08.1"
+const VERSION = "20.09.09.0"
 
 // var port io.ReadWriteCloser
 var (
@@ -168,6 +168,12 @@ func main() {
 		v1.GET("/flip", flip)
 		v1.GET("/turn", turn)
 		v1.GET("/setpos", setPoisition)
+		v1.GET("/reconnect", func(c *gin.Context) {
+			liftingserial.Close()
+			FDLogger.Println("Close lifting port")
+			liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate)
+			FDLogger.Println("Open lifting port")
+		})
 	}
 	regexRouter := ginregex.New(router, nil)
 	regexRouter.GET("/\\d+", Power)
