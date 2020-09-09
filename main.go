@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "20.09.09.0"
+const VERSION = "20.09.09.1"
 
 // var port io.ReadWriteCloser
 var (
@@ -171,8 +171,17 @@ func main() {
 		v1.GET("/reconnect", func(c *gin.Context) {
 			liftingserial.Close()
 			FDLogger.Println("Close lifting port")
-			liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate)
+			err := liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate)
 			FDLogger.Println("Open lifting port")
+			if err != nil {
+				c.JSON(http.StatusForbidden, gin.H{
+					"status": err.Error(),
+				})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"status": "Success",
+			})
 		})
 	}
 	regexRouter := ginregex.New(router, nil)
