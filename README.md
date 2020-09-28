@@ -65,7 +65,9 @@ serialcalibration.json, if PC only has two USB to serial port. this config can b
 
 ### lifting control
 * Get 
-   
+   all lift command can add interval=50 param, for example: http://localhost:8010/lift/hello?interval=30
+   it means send one char sleep 30ms and send next. default is 1ms
+
 http://localhost:8010/lift/hello  
 Command: AT  
 http://localhost:8010/lift/status  
@@ -90,8 +92,8 @@ Command: ATF+/ATF-
 http://localhost:8010/lift/turn?flag=[+-]    
 Command: ATT+/ATT-
 
-http://localhost:8010/lift/home?flag=[12]  
-Command: ATC1/ATC2 
+http://localhost:8010/lift/home?flag=[123]  
+Command: ATC1/ATC2/ATC3 
 
 http://localhost:8010/lift/reset  
 Command: ATZ  

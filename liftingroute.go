@@ -50,10 +50,14 @@ func (tf *TurnFlik) setPlus(b bool) {
 var flipcmd *TurnFlik = NewTurnFlik("ATF")
 var turncmd *TurnFlik = NewTurnFlik("ATT")
 
-func sendSerialData(cmd string, nTimeOut int32) (string, error) {
-	FDLogger.Printf("cmd:%s, timeout:%d\n", cmd, nTimeOut)
-	if _, err := liftingserial.WriteData([]byte(cmd)); err != nil {
-		return "", err
+func sendSerialData(cmd string, nTimeOut int32, interval int) (string, error) {
+	FDLogger.Printf("\ncmd:%s, timeout:%d, interval:%d\n", cmd, nTimeOut, interval)
+	bbcmd := []byte(cmd)
+	for i := 0; i < len(bbcmd); i++ {
+		if _, err := liftingserial.WriteData(bbcmd[i : i+1]); err != nil {
+			return "", err
+		}
+		time.Sleep(time.Duration(interval) * time.Microsecond)
 	}
 	time.Sleep(10 * time.Microsecond)
 	resp, err := liftingserial.ReadData(nTimeOut)
@@ -69,7 +73,12 @@ func sendSerialData(cmd string, nTimeOut int32) (string, error) {
 
 func hello(c *gin.Context) {
 	cmd := "AT\r"
-	resp, err := sendSerialData(cmd, 1)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 1, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -85,7 +94,12 @@ func hello(c *gin.Context) {
 
 func status(c *gin.Context) {
 	cmd := "ATS\r"
-	resp, err := sendSerialData(cmd, 1)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 1, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -101,7 +115,12 @@ func status(c *gin.Context) {
 
 func information(c *gin.Context) {
 	cmd := "ATI\r"
-	resp, err := sendSerialData(cmd, 6)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 6, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -126,7 +145,12 @@ func information(c *gin.Context) {
 
 func stop(c *gin.Context) {
 	cmd := "ATSTOP\r"
-	resp, err := sendSerialData(cmd, 5)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 5, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -142,7 +166,12 @@ func stop(c *gin.Context) {
 
 func reset(c *gin.Context) {
 	cmd := "ATZ\r"
-	resp, err := sendSerialData(cmd, 10)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 10, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -171,7 +200,12 @@ func home(c *gin.Context) {
 	cmd := "ATC%s\r"
 	flag := c.DefaultQuery("flag", "2")
 	cmd = fmt.Sprintf(cmd, flag)
-	resp, err := sendSerialData(cmd, 10)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 10, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -194,9 +228,14 @@ type PositionInfo struct {
 func goposition(c *gin.Context) {
 	cmd := "ATG%d\r"
 	var pp PositionInfo
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
 	if c.ShouldBindQuery(&pp) == nil {
 		cmd = fmt.Sprintf("ATG%d\r", pp.Position)
-		resp, err := sendSerialData(cmd, 10)
+		resp, err := sendSerialData(cmd, 10, interval)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -218,6 +257,11 @@ func goposition(c *gin.Context) {
 
 func setPoisition(c *gin.Context) {
 	var pp PositionInfo
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
 	if c.ShouldBindQuery(&pp) == nil {
 		val, err := strconv.ParseFloat(pp.Value, 64)
 		if err != nil {
@@ -237,7 +281,7 @@ func setPoisition(c *gin.Context) {
 		FDLogger.Println(cmd)
 		FDLogger.Printf("len=%d\n", len(cmd))
 		// cmd = "ATP6=+370.00\r"
-		resp, err := sendSerialData(cmd, 3)
+		resp, err := sendSerialData(cmd, 3, interval)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -264,7 +308,12 @@ func listposition(c *gin.Context) {
 			cmd = fmt.Sprintf("ATP%d?\r", pp.Position)
 		}
 	}
-	resp, err := sendSerialData(cmd, 3)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 3, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -312,7 +361,12 @@ func turn(c *gin.Context) {
 	default:
 		cmd = turncmd.getCmd()
 	}
-	resp, err := sendSerialData(cmd, 10)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 10, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -339,7 +393,12 @@ func flip(c *gin.Context) {
 	default:
 		cmd = flipcmd.getCmd()
 	}
-	resp, err := sendSerialData(cmd, 10)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 10, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err,
