@@ -81,6 +81,93 @@ func (sp *SerialPort) WriteData(data []byte) (int, error) {
 	// return len(data), nil
 }
 
+// ReadBytes read bytes from serial port
+func (sp *SerialPort) ReadBytes(nTimeout int32) ([]byte, error) {
+	resp := make(chan []byte)
+	err := make(chan error)
+	go func(resp chan []byte, errr chan error) {
+		buf := make([]byte, 4096)
+		cnt := 0
+		for {
+			time.Sleep(10 * time.Microsecond)
+			n, err := func() (int, error) {
+				// sp.mux.Lock()
+				// defer sp.mux.Unlock()
+				return sp.serialopen.Read(buf[cnt:])
+			}()
+
+			if err != nil {
+				FDLogger.Println("Error reading from serial port: ", err)
+				errr <- err
+				return
+			}
+			cnt += n
+			FDLogger.Println(buf[0:cnt])
+			if cnt >= 8 {
+				break
+			}
+		}
+
+		resp <- buf[:cnt]
+
+	}(resp, err)
+
+	select {
+	case strResp := <-resp:
+		FDLogger.Println(strResp)
+		return strResp, nil
+	case errret := <-err:
+		FDLogger.Println(errret)
+		return nil, errret
+	case <-time.After(time.Duration(nTimeout) * time.Second):
+		return nil, errors.New("recv data timeout")
+	}
+
+}
+
+// ReadDataLen read from usb port, timeout is microsecond
+func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
+	resp := make(chan string)
+	err := make(chan error)
+	go func(resp chan string, errr chan error) {
+		buf := make([]byte, 4096)
+		cnt := 0
+		for {
+			time.Sleep(10 * time.Microsecond)
+			n, err := func() (int, error) {
+				// sp.mux.Lock()
+				// defer sp.mux.Unlock()
+				return sp.serialopen.Read(buf[cnt:])
+			}()
+
+			if err != nil {
+				FDLogger.Println("Error reading from serial port: ", err)
+				errr <- err
+				return
+			}
+			cnt += n
+			FDLogger.Println(buf[0:cnt])
+			if bytes.Contains(buf, []byte("\r\n")) {
+				break
+			}
+		}
+
+		resp <- string(buf[:cnt])
+
+	}(resp, err)
+
+	select {
+	case strResp := <-resp:
+		FDLogger.Println(strResp)
+		return strResp, nil
+	case errret := <-err:
+		FDLogger.Println(errret)
+		return "", errret
+	case <-time.After(time.Duration(nTimeout) * time.Second):
+		return "", errors.New("recv data timeout")
+	}
+}
+
 // ReadData read from usb port
 func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 	resp := make(chan string)
@@ -126,14 +213,43 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 
 // USBSERIALPORTS serial ports configs
 type USBSERIALPORTS struct {
-	Power     string `json:"power"`
-	Lifting   string `json:"lifting"`
-	PBaudRate int    `json:"powerbaudrate"`
-	LBaudRate int    `json:"liftingbaudrate"`
+	Power      string `json:"power"`
+	Lifting    string `json:"lifting"`
+	Level      string `json:"voltage"`
+	PBaudRate  int    `json:"powerbaudrate"`
+	LBaudRate  int    `json:"liftingbaudrate"`
+	LevelBRate int    `json:"voltagebaudrate"`
 
 	serialPower   string
 	serialLifting string
+	serialVoltage string
 	ttyUSB        []string
+}
+
+// IsPowerSerial check is power serial
+func IsPowerSerial(sname string, baudrate int) bool {
+	pserial := &SerialPort{mux: &sync.Mutex{}}
+	if pserial.Open(sname, baudrate) != nil {
+		FDLogger.Printf("Open check port fail: %s, %d\n", sname, baudrate)
+		return false
+	}
+	defer pserial.Close()
+	time.Sleep(100 * time.Microsecond)
+	_, err := pserial.WriteData([]byte("?\r"))
+	if err != nil {
+		FDLogger.Printf("Failed to write data: %s\n", err)
+		return false
+	}
+	ret, err := pserial.ReadDataLen(1)
+	if err != nil {
+		FDLogger.Printf("Failed to readdata: %s\n", err)
+		return false
+	}
+	if strings.HasPrefix(ret, "I,") || strings.HasPrefix(ret, "POWER") {
+		return true
+	}
+	FDLogger.Printf("readdata: %s\n", ret)
+	return false
 }
 
 func (usp *USBSERIALPORTS) getDevBus(path string) (int, int, error) {
@@ -202,7 +318,7 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfig() error {
 		return errors.New("not find ttyUSB serial port")
 	}
 	// 1 or 2 USB
-	if len(usp.ttyUSB) < 3 {
+	if len(usp.ttyUSB) < 4 {
 		for _, devname := range usp.ttyUSB {
 			infos, err := DevsInfo(devname)
 			if err != nil {
@@ -225,8 +341,15 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfig() error {
 				}
 			}
 			if bch340Vid && bch340Pid {
-				usp.serialPower = devname
-				usp.PBaudRate = 9600
+				if usp.serialPower == "" && IsPowerSerial(devname, 9600) {
+					usp.serialPower = devname
+					usp.PBaudRate = 9600
+				} else {
+					usp.serialVoltage = devname
+					usp.LevelBRate = 9600
+
+				}
+
 			}
 			if bVid && bPid {
 				usp.serialLifting = devname
@@ -325,6 +448,9 @@ func (usp *USBSERIALPORTS) VerifyDevName() error {
 		} else if locpath == usp.Lifting {
 			usp.serialLifting = s
 			FDLogger.Printf("found lifting serial: %s\n", s)
+		} else if locpath == usp.Level {
+			usp.serialVoltage = s
+			FDLogger.Printf("found voltage serial: %s\n", s)
 		}
 	}
 	return nil
@@ -337,6 +463,11 @@ func (usp *USBSERIALPORTS) verifyDevName() error {
 	powerbus, powerdev, err := usp.getDevBus(usp.Power)
 	if err != nil {
 		FDLogger.Printf("power parser error: %s\n", err)
+		return err
+	}
+	voltagebus, voltagedev, err := usp.getDevBus(usp.Level)
+	if err != nil {
+		FDLogger.Printf("voltage parser error: %s\n", err)
 		return err
 	}
 	liftbus, liftdev, err := usp.getDevBus(usp.Lifting)
@@ -359,6 +490,9 @@ func (usp *USBSERIALPORTS) verifyDevName() error {
 		} else if nbusnum == liftbus && ndevnum == liftdev {
 			usp.serialLifting = s
 			FDLogger.Printf("found lifting serial: %s\n", s)
+		} else if nbusnum == voltagebus && ndevnum == voltagedev {
+			usp.serialVoltage = s
+			FDLogger.Printf("found power serial: %s\n", s)
 		}
 		// sstart := fmt.Sprintf("Bus %s Device %s: ID", busnum, devnum)
 		// if strings.HasPrefix(usp.Power, sstart) {

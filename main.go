@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "20.09.28.1"
+const VERSION = "20.12.06.1"
 
 // var port io.ReadWriteCloser
 var (
@@ -120,6 +120,7 @@ func main() {
 	usbserialList := USBSERIALPORTS{}
 	powerserial = &SerialPort{mux: &sync.Mutex{}}
 	liftingserial = &SerialPort{mux: &sync.Mutex{}}
+	levelserial = &SerialPort{mux: &sync.Mutex{}}
 
 	if usbserialList.LoadConfig("serialcalibration.json") == nil {
 		if err := usbserialList.VerifyDevName(); err != nil {
@@ -132,6 +133,8 @@ func main() {
 		powerserial.baudrate = usbserialList.PBaudRate
 		liftingserial.portname = usbserialList.serialLifting
 		liftingserial.baudrate = usbserialList.LBaudRate
+		levelserial.portname = usbserialList.serialVoltage
+		levelserial.baudrate = usbserialList.LevelBRate
 	}
 
 	if usbserialList.serialPower != "" {
@@ -141,9 +144,19 @@ func main() {
 		}
 		defer powerserial.Close()
 	}
-	if usbserialList.serialLifting == "" {
-		usbserialList.serialLifting = "/dev/ttyS0"
+
+	if usbserialList.serialVoltage != "" {
+		if err := levelserial.Open(usbserialList.serialVoltage, usbserialList.LevelBRate); err != nil {
+			FDLogger.Fatalf("open voltage control fail: %s\n", err)
+			return
+		}
+		defer levelserial.Close()
+		sendPowerOn()
 	}
+
+	// if usbserialList.serialLifting == "" {
+	// 	usbserialList.serialLifting = "/dev/ttyS0"
+	// }
 	if usbserialList.serialLifting != "" { // 115200 lifting,
 		if err := liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate); err != nil {
 			FDLogger.Fatalf("open power control fail: %s\n", err)
@@ -183,6 +196,10 @@ func main() {
 				"status": "Success",
 			})
 		})
+	}
+	v2 := router.Group("/level")
+	{
+		v2.GET("/voltage", voltage)
 	}
 	regexRouter := ginregex.New(router, nil)
 	regexRouter.GET("/\\d+", Power)

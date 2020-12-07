@@ -55,6 +55,7 @@ lsusb -t
 
 serialcalibration.json, if PC only has two USB to serial port. this config can be removed.
 ```
+udevadm info -q path -n /dev/ttyUSB0  
 {
     "power":"3-1",
     "powerbaudrate":9600,
@@ -123,3 +124,6 @@ if not find config json file:
 |>2|any|any|need config json|
 
 if lifting PID VID defined, software will be enhanced.
+
+### voltage:
+http://localhost:8010/level/voltage?v=1180
