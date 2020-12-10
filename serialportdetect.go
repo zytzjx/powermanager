@@ -226,6 +226,24 @@ type USBSERIALPORTS struct {
 	ttyUSB        []string
 }
 
+func retry(attempts int, sleep time.Duration, f func() error) (err error) {
+	for i := 0; ; i++ {
+		err = f()
+		if err == nil {
+			return
+		}
+
+		if i >= (attempts - 1) {
+			break
+		}
+
+		time.Sleep(sleep)
+
+		log.Println("retrying after error:", err)
+	}
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
+}
+
 // IsPowerSerial check is power serial
 func IsPowerSerial(sname string, baudrate int) bool {
 	pserial := &SerialPort{mux: &sync.Mutex{}}
@@ -235,16 +253,25 @@ func IsPowerSerial(sname string, baudrate int) bool {
 	}
 	defer pserial.Close()
 	time.Sleep(100 * time.Microsecond)
-	_, err := pserial.WriteData([]byte("?\r"))
-	if err != nil {
-		FDLogger.Printf("Failed to write data: %s\n", err)
+	var ret string
+	errretry := retry(3, 10*time.Microsecond, func() error {
+		_, err := pserial.WriteData([]byte("?\r"))
+		if err != nil {
+			FDLogger.Printf("Failed to write data: %s\n", err)
+			return err
+		}
+		ret, err = pserial.ReadDataLen(1)
+		if err != nil {
+			FDLogger.Printf("Failed to readdata: %s\n", err)
+			return err
+		}
+		return nil
+	})
+
+	if errretry != nil {
 		return false
 	}
-	ret, err := pserial.ReadDataLen(1)
-	if err != nil {
-		FDLogger.Printf("Failed to readdata: %s\n", err)
-		return false
-	}
+
 	if strings.HasPrefix(ret, "I,") || strings.HasPrefix(ret, "POWER") {
 		return true
 	}

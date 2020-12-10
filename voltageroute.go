@@ -49,7 +49,7 @@ func sendSerialbytesData(data []byte, nTimeOut int32) error {
 	return fmt.Errorf("not found: %s", hex.EncodeToString(resp))
 }
 
-func sendPowerOn() {
+func sendPowerOn() error {
 	// 01-06-00-01-00-01-19-CA
 	var data = make([]byte, 8)
 	data[0] = 0x01
@@ -62,8 +62,55 @@ func sendPowerOn() {
 	data[7] = 0xCA
 	if err := sendSerialbytesData(data, 1); err != nil {
 		FDLogger.Fatal("set power on Failed")
+		return err
 	}
+	return nil
+}
 
+func sendPowerOff() error {
+	// 01-06-00-01-00-01-19-CA
+	var data = make([]byte, 8)
+	data[0] = 0x01
+	data[1] = 0x06
+	data[2] = 0x00
+	data[3] = 0x01
+	data[4] = 0x00
+	data[5] = 0x00
+	data[6] = 0xD8
+	data[7] = 0x0A
+	if err := sendSerialbytesData(data, 1); err != nil {
+		FDLogger.Fatal("set power off Failed")
+		return err
+	}
+	return nil
+}
+
+func poweroff(c *gin.Context) {
+	if err := sendPowerOff(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "power off command failed",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status": "OK",
+	})
+}
+
+func poweron(c *gin.Context) {
+	if err := sendPowerOn(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "power on command failed",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status": "OK",
+	})
 }
 
 func voltage(c *gin.Context) {

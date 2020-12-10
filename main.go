@@ -165,6 +165,7 @@ func main() {
 		defer liftingserial.Close()
 	}
 
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.GET("/", HomePage)
 	router.POST("/exitsystem", exit)
@@ -200,6 +201,8 @@ func main() {
 	v2 := router.Group("/level")
 	{
 		v2.GET("/voltage", voltage)
+		v2.GET("/poweron", poweron)
+		v2.GET("/poweroff", poweroff)
 	}
 	regexRouter := ginregex.New(router, nil)
 	regexRouter.GET("/\\d+", Power)
