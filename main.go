@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "20.12.11.1"
+const VERSION = "20.12.11.2"
 
 // var port io.ReadWriteCloser
 var (
@@ -102,12 +102,12 @@ func exit(c *gin.Context) {
 		})
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := FDsrv.Shutdown(ctx); err != nil {
+	c.JSON(http.StatusOK, gin.H{
+		"status": "OK",
+	})
+	if err := FDsrv.Shutdown(context.Background()); err != nil {
 		FDLogger.Fatalf("Server forced to shutdown: %s\n", err)
 	}
-
 	FDLogger.Println("Server exiting")
 	os.Exit(0)
 }
