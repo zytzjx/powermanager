@@ -257,12 +257,12 @@ func IsPowerSerial(sname string, baudrate int) bool {
 	errretry := retry(3, 10*time.Microsecond, func() error {
 		_, err := pserial.WriteData([]byte("?\r"))
 		if err != nil {
-			FDLogger.Printf("Failed to write data: %s\n", err)
+			FDLogger.Printf("IsPowerSerial Failed to write data: %s\n", err)
 			return err
 		}
 		ret, err = pserial.ReadDataLen(1)
 		if err != nil {
-			FDLogger.Printf("Failed to readdata: %s\n", err)
+			FDLogger.Printf("IsPowerSerial Failed to readdata: %s\n", err)
 			return err
 		}
 		return nil
@@ -275,7 +275,7 @@ func IsPowerSerial(sname string, baudrate int) bool {
 	if strings.HasPrefix(ret, "I,") || strings.HasPrefix(ret, "POWER") {
 		return true
 	}
-	FDLogger.Printf("readdata: %s\n", ret)
+	FDLogger.Printf("IsPowerSerial readdata: %s\n", ret)
 	return false
 }
 
@@ -323,7 +323,7 @@ func DevsInfo(DevName string) (map[string]string, error) {
 		FDLogger.Printf("Failed to execute command: %s, %s\n", cmd, err)
 		return infos, err
 	}
-	FDLogger.Printf("result execute command: %s, %s\n", cmd, string(out))
+	// FDLogger.Printf("result execute command: %s, %s\n", cmd, string(out))
 	scanner := bufio.NewScanner(bytes.NewReader(out))
 	re := regexp.MustCompile(`^.: (.*?)=(.*)$`)
 	for scanner.Scan() {
@@ -371,16 +371,18 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfig() error {
 				if usp.serialPower == "" && IsPowerSerial(devname, 9600) {
 					usp.serialPower = devname
 					usp.PBaudRate = 9600
+					FDLogger.Printf("Found arduino: %s\n", devname)
 				} else {
 					usp.serialVoltage = devname
 					usp.LevelBRate = 9600
-
+					FDLogger.Printf("Found power supply: %s\n", devname)
 				}
 
 			}
 			if bVid && bPid {
 				usp.serialLifting = devname
 				usp.LBaudRate = 115200
+				FDLogger.Printf("Found lifting: %s\n", devname)
 			}
 		}
 	} else {

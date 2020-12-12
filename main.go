@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "20.12.06.1"
+const VERSION = "20.12.11.1"
 
 // var port io.ReadWriteCloser
 var (
