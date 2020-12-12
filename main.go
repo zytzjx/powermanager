@@ -21,14 +21,16 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "20.12.11.2"
+const VERSION = "20.12.12.2"
 
 // var port io.ReadWriteCloser
 var (
 	powerserial *SerialPort
 	FDLogger    *log.Logger
-	FDsrv       *http.Server
 )
+
+// EXITPROC exit processing
+var EXITPROC chan string = make(chan string)
 
 // Init Loger
 func Init() {
@@ -105,13 +107,9 @@ func exit(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "OK",
 	})
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	if err := FDsrv.Shutdown(ctx); err != nil {
-		FDLogger.Fatalf("Server forced to shutdown: %s\n", err)
-	}
+	EXITPROC <- "server exit"
 	FDLogger.Println("Server exiting")
-	os.Exit(0)
+	// os.Exit(0)
 }
 
 // HomePage info
@@ -221,7 +219,7 @@ func main() {
 		Addr:    ":8010",
 		Handler: router,
 	}
-	FDsrv = srv
+
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
 	go func() {
@@ -238,7 +236,13 @@ func main() {
 	// kill -2 is syscall.SIGINT
 	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	// <-quit
+	select {
+	case <-quit:
+		FDLogger.Println("Shutting down CTRL+C server...")
+	case <-EXITPROC:
+		FDLogger.Println("http post Shutting down server...")
+	}
 	FDLogger.Println("Shutting down server...")
 
 	// The context is used to inform the server it has 5 seconds to finish
