@@ -105,7 +105,9 @@ func exit(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "OK",
 	})
-	if err := FDsrv.Shutdown(context.Background()); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	if err := FDsrv.Shutdown(ctx); err != nil {
 		FDLogger.Fatalf("Server forced to shutdown: %s\n", err)
 	}
 	FDLogger.Println("Server exiting")
