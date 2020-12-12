@@ -27,6 +27,7 @@ const VERSION = "20.12.11.1"
 var (
 	powerserial *SerialPort
 	FDLogger    *log.Logger
+	FDsrv       *http.Server
 )
 
 // Init Loger
@@ -101,6 +102,13 @@ func exit(c *gin.Context) {
 		})
 		return
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := FDsrv.Shutdown(ctx); err != nil {
+		FDLogger.Fatalf("Server forced to shutdown: %s\n", err)
+	}
+
+	FDLogger.Println("Server exiting")
 	os.Exit(0)
 }
 
@@ -211,7 +219,7 @@ func main() {
 		Addr:    ":8010",
 		Handler: router,
 	}
-
+	FDsrv = srv
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
 	go func() {
