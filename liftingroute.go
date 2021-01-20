@@ -13,6 +13,7 @@ import (
 )
 
 var liftingserial *SerialPort
+var liftMutex = &sync.Mutex{}
 
 // TurnFlik record flik
 type TurnFlik struct {
@@ -72,6 +73,8 @@ func sendSerialData(cmd string, nTimeOut int32, interval int) (string, error) {
 }
 
 func hello(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
 	cmd := "AT\r"
 	sinterval := c.DefaultQuery("interval", "1")
 	interval, err := strconv.Atoi(sinterval)
@@ -93,6 +96,8 @@ func hello(c *gin.Context) {
 }
 
 func status(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
 	cmd := "ATS\r"
 	sinterval := c.DefaultQuery("interval", "1")
 	interval, err := strconv.Atoi(sinterval)
@@ -114,6 +119,9 @@ func status(c *gin.Context) {
 }
 
 func information(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	cmd := "ATI\r"
 	sinterval := c.DefaultQuery("interval", "1")
 	interval, err := strconv.Atoi(sinterval)
@@ -144,6 +152,9 @@ func information(c *gin.Context) {
 }
 
 func stop(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	cmd := "ATSTOP\r"
 	sinterval := c.DefaultQuery("interval", "1")
 	interval, err := strconv.Atoi(sinterval)
@@ -165,6 +176,9 @@ func stop(c *gin.Context) {
 }
 
 func reset(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	cmd := "ATZ\r"
 	sinterval := c.DefaultQuery("interval", "1")
 	interval, err := strconv.Atoi(sinterval)
@@ -186,6 +200,9 @@ func reset(c *gin.Context) {
 }
 
 func home(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	// _, err := sendSerialData("ATG-1\r", 10)
 	// if err != nil {
 	// 	c.JSON(http.StatusInternalServerError, gin.H{
@@ -219,6 +236,58 @@ func home(c *gin.Context) {
 	})
 }
 
+func wind(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
+	cmd := "ATW%s\r"
+	flag := c.DefaultQuery("flag", "0")
+	cmd = fmt.Sprintf(cmd, flag)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 10, interval)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "OK",
+		"message": resp,
+	})
+}
+
+func carrier(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
+	cmd := "ATX%s\r"
+	flag := c.DefaultQuery("flag", "0")
+	cmd = fmt.Sprintf(cmd, flag)
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	resp, err := sendSerialData(cmd, 10, interval)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "OK",
+		"message": resp,
+	})
+}
+
 // PositionInfo position info
 type PositionInfo struct {
 	Position int    `form:"p"`
@@ -226,6 +295,9 @@ type PositionInfo struct {
 }
 
 func goposition(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	cmd := "ATG%d\r"
 	var pp PositionInfo
 	sinterval := c.DefaultQuery("interval", "1")
@@ -256,6 +328,9 @@ func goposition(c *gin.Context) {
 }
 
 func setPoisition(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	var pp PositionInfo
 	sinterval := c.DefaultQuery("interval", "1")
 	interval, err := strconv.Atoi(sinterval)
@@ -301,6 +376,9 @@ func setPoisition(c *gin.Context) {
 }
 
 func listposition(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	cmd := "ATP?\r"
 	var pp PositionInfo
 	if c.Query("p") != "" {
@@ -338,6 +416,9 @@ func listposition(c *gin.Context) {
 }
 
 func turn(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	// _, err := sendSerialData("ATG-1\r", 10)
 	// if err != nil {
 	// 	c.JSON(http.StatusInternalServerError, gin.H{
@@ -381,6 +462,9 @@ func turn(c *gin.Context) {
 }
 
 func flip(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
 	cmd := "ATF%s\r"
 	value := c.DefaultQuery("flag", "+")
 	switch value {
