@@ -4,14 +4,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
-	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -21,7 +18,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.1.20.2"
+const VERSION = "21.3.19.2"
 
 // var port io.ReadWriteCloser
 var (
@@ -44,51 +41,6 @@ func Init() {
 	FDLogger = log.New(multi,
 		"",
 		log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
-}
-
-// Power control power module
-func Power(c *gin.Context) {
-	FDLogger.Println("power ++")
-	param := c.Request.URL.Query()
-	re := regexp.MustCompile(`\d+`)
-	sp := re.FindString(c.Request.URL.Path)
-	dp, err := strconv.Atoi(sp)
-	if err != nil || dp < 2 || dp > 13 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": sp,
-		})
-		FDLogger.Println("power --")
-		return
-	}
-	dp -= 2
-	bOn := 1
-	if on, ok := param["on"]; ok {
-		if len(on) > 0 {
-			bn, err := strconv.Atoi(on[0])
-			if err != nil {
-				log.Fatal(err)
-			}
-			bOn = bn
-		}
-	}
-
-	ss := fmt.Sprintf("P%d,%d,\r", dp, bOn)
-	FDLogger.Println("Send:", ss)
-	if _, err = powerserial.WriteData([]byte(ss)); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"pin":    sp,
-			"status": bOn,
-			"serial": ss,
-		})
-		FDLogger.Println("power --")
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"pin":    sp,
-		"status": bOn,
-		"serial": ss,
-	})
-	FDLogger.Println("power --")
 }
 
 func exit(c *gin.Context) {
@@ -173,6 +125,8 @@ func main() {
 		defer liftingserial.Close()
 	}
 
+	go recvStatus()
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.GET("/", HomePage)
@@ -214,6 +168,12 @@ func main() {
 		v2.GET("/poweron", poweron)
 		v2.GET("/poweroff", poweroff)
 	}
+	v3 := router.Group("/tricl")
+	{
+		v3.GET("/warning", greenLed)
+		v3.GET("/warning", yellowLed)
+		v3.GET("/warning", redLed)
+	}
 	regexRouter := ginregex.New(router, nil)
 	regexRouter.GET("/\\d+", Power)
 
@@ -245,6 +205,7 @@ func main() {
 	case <-EXITPROC:
 		FDLogger.Println("http post Shutting down server...")
 	}
+	bexit = true
 	FDLogger.Println("Shutting down server...")
 
 	// The context is used to inform the server it has 5 seconds to finish
