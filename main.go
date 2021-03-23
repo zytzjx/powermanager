@@ -18,7 +18,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.3.19.2"
+const VERSION = "21.3.23.2"
 
 // var port io.ReadWriteCloser
 var (
@@ -170,9 +170,9 @@ func main() {
 	}
 	v3 := router.Group("/tricl")
 	{
-		v3.GET("/warning", greenLed)
-		v3.GET("/warning", yellowLed)
-		v3.GET("/warning", redLed)
+		v3.GET("/green", greenLed)
+		v3.GET("/yellow", yellowLed)
+		v3.GET("/red", redLed)
 	}
 	regexRouter := ginregex.New(router, nil)
 	regexRouter.GET("/\\d+", Power)

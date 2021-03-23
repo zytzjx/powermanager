@@ -368,15 +368,24 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfig() error {
 				}
 			}
 			if bch340Vid && bch340Pid {
-				if usp.serialPower == "" && IsPowerSerial(devname, 9600) {
-					usp.serialPower = devname
-					usp.PBaudRate = 9600
-					FDLogger.Printf("Found arduino: %s\n", devname)
-				} else {
+				if usp.serialVoltage == "" && IsVoltageController(devname, 9600) {
 					usp.serialVoltage = devname
 					usp.LevelBRate = 9600
 					FDLogger.Printf("Found power supply: %s\n", devname)
+				} else {
+					usp.serialPower = devname
+					usp.PBaudRate = 9600
+					FDLogger.Printf("Found arduino: %s\n", devname)
 				}
+				//  if usp.serialPower == "" && IsPowerSerial(devname, 9600) {
+				// 	usp.serialPower = devname
+				// 	usp.PBaudRate = 9600
+				// 	FDLogger.Printf("Found arduino: %s\n", devname)
+				// } else {
+				// 	usp.serialVoltage = devname
+				// 	usp.LevelBRate = 9600
+				// 	FDLogger.Printf("Found power supply: %s\n", devname)
+				// }
 
 			}
 			if bVid && bPid {

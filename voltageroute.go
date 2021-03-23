@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,53 @@ func sendSerialbytesData(data []byte, nTimeOut int32) error {
 	}
 
 	return fmt.Errorf("not found: %s", hex.EncodeToString(resp))
+}
+
+func readSerialData(pserial *SerialPort, data []byte, nTimeOut int32, cmd byte) error {
+	FDLogger.Printf("\nData:%s, timeout:%d\n", hex.EncodeToString(data), nTimeOut)
+
+	if _, err := pserial.WriteData(data); err != nil {
+		return err
+	}
+	time.Sleep(10 * time.Microsecond)
+	resp, err := pserial.ReadBytes(nTimeOut)
+	if err != nil {
+		return err
+	}
+
+	if len(resp) > 4 && resp[1] == cmd {
+		return nil
+	}
+
+	return fmt.Errorf("not found: %s", hex.EncodeToString(resp))
+}
+
+func IsVoltageController(sname string, baudrate int) bool {
+	pserial := &SerialPort{mux: &sync.Mutex{}}
+	if pserial.Open(sname, baudrate) != nil {
+		FDLogger.Printf("Open check port fail: %s, %d\n", sname, baudrate)
+		return false
+	}
+	defer pserial.Close()
+	time.Sleep(100 * time.Microsecond)
+	return getDevicePowerStat(pserial) == nil
+}
+
+func getDevicePowerStat(pserial *SerialPort) error {
+	var ReadPowerSWComand = make([]byte, 8)
+	ReadPowerSWComand[0] = 0x01
+	ReadPowerSWComand[1] = 0x03
+	ReadPowerSWComand[2] = 0x00
+	ReadPowerSWComand[3] = 0x01
+	ReadPowerSWComand[4] = 0x00
+	ReadPowerSWComand[5] = 0x01
+	ReadPowerSWComand[6] = 0xD5
+	ReadPowerSWComand[7] = 0xCA
+	if err := readSerialData(pserial, ReadPowerSWComand, 1, ReadPowerSWComand[1]); err != nil {
+		FDLogger.Fatal("set power on Failed")
+		return err
+	}
+	return nil
 }
 
 func sendPowerOn() error {
