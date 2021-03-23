@@ -14,6 +14,7 @@ import (
 
 var liftingserial *SerialPort
 var liftMutex = &sync.Mutex{}
+var muxWait = &sync.Mutex{}
 var bNeedSleep = false
 
 // TurnFlik record flik
@@ -73,19 +74,31 @@ func sendSerialData(cmd string, nTimeOut int32, interval int) (string, error) {
 	return "", fmt.Errorf("not found OK: %s", resp)
 }
 
+func setNeedSleepFlag() {
+	muxWait.Lock()
+	bNeedSleep = true
+	muxWait.Unlock()
+}
+
+func waitSleepFlag() {
+	muxWait.Lock()
+	time.Sleep(time.Duration(200) * time.Microsecond)
+	bNeedSleep = false
+	muxWait.Unlock()
+}
+
 func hello(c *gin.Context) {
 	if bNeedSleep {
 		time.Sleep(time.Duration(200) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
+
 	cmd := "AT\r"
 	sinterval := c.DefaultQuery("interval", "1")
 	interval, err := strconv.Atoi(sinterval)
@@ -112,13 +125,11 @@ func status(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATS\r"
 	sinterval := c.DefaultQuery("interval", "1")
@@ -146,13 +157,11 @@ func information(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATI\r"
 	sinterval := c.DefaultQuery("interval", "1")
@@ -189,13 +198,11 @@ func stop(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATSTOP\r"
 	sinterval := c.DefaultQuery("interval", "1")
@@ -223,13 +230,11 @@ func reset(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATZ\r"
 	sinterval := c.DefaultQuery("interval", "1")
@@ -257,13 +262,11 @@ func home(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	// _, err := sendSerialData("ATG-1\r", 10)
 	// if err != nil {
@@ -304,13 +307,11 @@ func wind(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATW%s\r"
 	flag := c.DefaultQuery("flag", "0")
@@ -340,13 +341,11 @@ func carrier(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATX%s\r"
 	flag := c.DefaultQuery("flag", "0")
@@ -382,13 +381,11 @@ func goposition(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATG%d\r"
 	var pp PositionInfo
@@ -425,13 +422,11 @@ func setPoisition(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	var pp PositionInfo
 	sinterval := c.DefaultQuery("interval", "1")
@@ -483,13 +478,11 @@ func listposition(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATP?\r"
 	var pp PositionInfo
@@ -533,13 +526,11 @@ func turn(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATT%s\r"
 	value := c.DefaultQuery("flag", "+")
@@ -578,13 +569,11 @@ func flip(c *gin.Context) {
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
+
 	defer func() {
-		go func() {
-			time.Sleep(time.Duration(200) * time.Microsecond)
-			bNeedSleep = false
-		}()
+		go waitSleepFlag()
 	}()
-	bNeedSleep = true
+	setNeedSleepFlag()
 
 	cmd := "ATF%s\r"
 	value := c.DefaultQuery("flag", "+")
