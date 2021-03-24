@@ -103,7 +103,7 @@ func (sp *SerialPort) ReadBytes(nTimeout int32) ([]byte, error) {
 			}
 			cnt += n
 			FDLogger.Println(buf[0:cnt])
-			if cnt >= 8 {
+			if cnt >= 6 { // this is modbus: id cmd addr(2) crc(2) , so >=6.
 				break
 			}
 		}

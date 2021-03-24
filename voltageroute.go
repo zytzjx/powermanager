@@ -82,6 +82,19 @@ func IsVoltageController(sname string, baudrate int) bool {
 
 func getDeviceModelID(pserial *SerialPort) error {
 	var ReadPowerSWComand = make([]byte, 8)
+	// read Power status
+	// 01-03-00-01-00-01-D5-CA
+	// ReadPowerSWComand[0] = 0x01
+	// ReadPowerSWComand[1] = 0x03
+	// ReadPowerSWComand[2] = 0x00
+	// ReadPowerSWComand[3] = 0x01
+	// ReadPowerSWComand[4] = 0x00
+	// ReadPowerSWComand[5] = 0x01
+	// ReadPowerSWComand[6] = 0xD5
+	// ReadPowerSWComand[7] = 0xCA
+
+	// read model ID
+	// 01-03-00-03-00-01-74-0A
 	ReadPowerSWComand[0] = 0x01
 	ReadPowerSWComand[1] = 0x03
 	ReadPowerSWComand[2] = 0x00
@@ -90,6 +103,7 @@ func getDeviceModelID(pserial *SerialPort) error {
 	ReadPowerSWComand[5] = 0x01
 	ReadPowerSWComand[6] = 0x74
 	ReadPowerSWComand[7] = 0x0A
+
 	if err := readSerialData(pserial, ReadPowerSWComand, 1, ReadPowerSWComand[1]); err != nil {
 		FDLogger.Println("set power on Failed")
 		return err
@@ -116,7 +130,7 @@ func sendPowerOn() error {
 }
 
 func sendPowerOff() error {
-	// 01-06-00-01-00-01-19-CA
+	// 01-06-00-01-00-00-D8-0A
 	var data = make([]byte, 8)
 	data[0] = 0x01
 	data[1] = 0x06
