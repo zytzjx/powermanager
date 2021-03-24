@@ -20,8 +20,8 @@ func CRC16Calc(data []byte) (hi byte, low byte, err error) {
 	table := crc16.MakeTable(crc16.Crc16MODBUS)
 	if table == nil {
 		fmt.Printf("Failed to create %q computer\n", crc16.Crc16MODBUS.Name)
-		err = fmt.Errorf("Failed to create %q computer", crc16.Crc16MODBUS.Name)
-		return
+		err = fmt.Errorf("failed to create %v computer", crc16.Crc16MODBUS.Name)
+		return 0, 0, err
 	}
 	// 0x534B
 	crc := crc16.Checksum(data, table)
@@ -43,7 +43,7 @@ func sendSerialbytesData(data []byte, nTimeOut int32) error {
 		return err
 	}
 
-	if resp != nil && bytes.Compare(data, resp) == 0 {
+	if resp != nil && bytes.Equal(data, resp) {
 		return nil
 	}
 
@@ -91,7 +91,7 @@ func getDevicePowerStat(pserial *SerialPort) error {
 	ReadPowerSWComand[6] = 0xD5
 	ReadPowerSWComand[7] = 0xCA
 	if err := readSerialData(pserial, ReadPowerSWComand, 1, ReadPowerSWComand[1]); err != nil {
-		FDLogger.Fatal("set power on Failed")
+		FDLogger.Println("set power on Failed")
 		return err
 	}
 	return nil
@@ -109,7 +109,7 @@ func sendPowerOn() error {
 	data[6] = 0x19
 	data[7] = 0xCA
 	if err := sendSerialbytesData(data, 1); err != nil {
-		FDLogger.Fatal("set power on Failed")
+		FDLogger.Println("set power on Failed")
 		return err
 	}
 	return nil
@@ -127,7 +127,7 @@ func sendPowerOff() error {
 	data[6] = 0xD8
 	data[7] = 0x0A
 	if err := sendSerialbytesData(data, 1); err != nil {
-		FDLogger.Fatal("set power off Failed")
+		FDLogger.Println("set power off Failed")
 		return err
 	}
 	return nil
