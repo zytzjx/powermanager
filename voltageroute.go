@@ -77,19 +77,19 @@ func IsVoltageController(sname string, baudrate int) bool {
 	}
 	defer pserial.Close()
 	time.Sleep(100 * time.Microsecond)
-	return getDevicePowerStat(pserial) == nil
+	return getDeviceModelID(pserial) == nil
 }
 
-func getDevicePowerStat(pserial *SerialPort) error {
+func getDeviceModelID(pserial *SerialPort) error {
 	var ReadPowerSWComand = make([]byte, 8)
 	ReadPowerSWComand[0] = 0x01
 	ReadPowerSWComand[1] = 0x03
 	ReadPowerSWComand[2] = 0x00
-	ReadPowerSWComand[3] = 0x01
+	ReadPowerSWComand[3] = 0x03
 	ReadPowerSWComand[4] = 0x00
 	ReadPowerSWComand[5] = 0x01
-	ReadPowerSWComand[6] = 0xD5
-	ReadPowerSWComand[7] = 0xCA
+	ReadPowerSWComand[6] = 0x74
+	ReadPowerSWComand[7] = 0x0A
 	if err := readSerialData(pserial, ReadPowerSWComand, 1, ReadPowerSWComand[1]); err != nil {
 		FDLogger.Println("set power on Failed")
 		return err
