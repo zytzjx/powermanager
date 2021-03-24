@@ -137,18 +137,18 @@ http://localhost:8010/level/poweron
 http://localhost:8010/level/poweroff
 
 ### tricolored light
-http://localhost:8010/tricl/green
-http://localhost:8010/tricl/yollow
-http://localhost:8010/tricl/read
+http://localhost:8010/tricl/green  
+http://localhost:8010/tricl/yollow  
+http://localhost:8010/tricl/read  
 
 if you want to light multi LED. you can use  
    http://localhost:8010/x?on=1  x is 2,3,7
 
 ### keys
 check redis DB
-Publish key: tricoloredlight
-value is regex: "Key:\s*(\d),\s*(\d),\s*(\d)"
-group 1, 2, 3 means key 1, key2 , key3 status.
+Publish key: tricoloredlight  
+value is regex: "Key:\s*(\d),\s*(\d),\s*(\d)"  
+group 1, 2, 3 means key 1, key2 , key3 status.  
 
 
 
