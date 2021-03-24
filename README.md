@@ -132,9 +132,9 @@ if not find config json file:
 if lifting PID VID defined, software will be enhanced.
 
 ### voltage:
-http://localhost:8010/level/voltage?v=1180
-http://localhost:8010/level/poweron
-http://localhost:8010/level/poweroff
+http://localhost:8010/level/voltage?v=1180  
+http://localhost:8010/level/poweron  
+http://localhost:8010/level/poweroff  
 
 ### tricolored light
 http://localhost:8010/tricl/green  
