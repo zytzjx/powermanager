@@ -198,7 +198,7 @@ func (sp *SerialPort) ReadDataATC(nTimeout int32) (string, error) {
 			}
 			if cnt > 3 {
 				nRecordATCError++
-				FDLogger.Printf("ATC Return error format: %d", nRecordATCError)
+				FDLogger.Printf("ATC Return error format: %d\n", nRecordATCError)
 				break
 			}
 		}
