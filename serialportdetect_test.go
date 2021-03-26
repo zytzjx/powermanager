@@ -1,10 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
 )
+
+func TestByteArray(t *testing.T) {
+	buf := []byte{65, 84, 71, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 71, 48, 13, 10, 82, 85, 78, 78, 73, 78, 71, 13, 10, 65, 84, 87, 49, 13, 10, 65, 84, 71, 45, 49, 13, 79, 75, 13, 10}
+	if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
+		t.Log("found")
+		return
+	}
+	t.Error("not found")
+}
 
 // AssertEqual checks if values are equal
 func AssertEqual(t *testing.T, a interface{}, b interface{}) {

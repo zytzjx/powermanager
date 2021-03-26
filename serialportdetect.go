@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +30,8 @@ type SerialPort struct {
 	baudrate int
 	IsOpened bool
 }
+
+var nRecordATCError int
 
 // Open open serial port
 func (sp *SerialPort) Open(PortName string, BaudRate int) error {
@@ -146,7 +149,7 @@ func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 				return
 			}
 			cnt += n
-			FDLogger.Println(buf[0:cnt])
+			FDLogger.Println(hex.Dump(buf[0:cnt]))
 			if bytes.Contains(buf, []byte("\r\n")) {
 				break
 			}
@@ -189,9 +192,13 @@ func (sp *SerialPort) ReadDataATC(nTimeout int32) (string, error) {
 				return
 			}
 			cnt += n
-			FDLogger.Println(buf[0:cnt])
-			// if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
+			FDLogger.Println(hex.Dump(buf[0:cnt]))
+			if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
+				break
+			}
 			if cnt > 3 {
+				nRecordATCError++
+				FDLogger.Printf("ATC Return error format: %d", nRecordATCError)
 				break
 			}
 		}
