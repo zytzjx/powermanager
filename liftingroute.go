@@ -74,6 +74,27 @@ func sendSerialData(cmd string, nTimeOut int32, interval int) (string, error) {
 	return "", fmt.Errorf("not found OK: %s", resp)
 }
 
+func sendSerialDataATC(cmd string, nTimeOut int32, interval int) (string, error) {
+	FDLogger.Printf("\ncmd:%s, timeout:%d, interval:%d\n", cmd, nTimeOut, interval)
+	bbcmd := []byte(cmd)
+	for i := 0; i < len(bbcmd); i++ {
+		if _, err := liftingserial.WriteData(bbcmd[i : i+1]); err != nil {
+			return "", err
+		}
+		time.Sleep(time.Duration(interval) * time.Microsecond)
+	}
+	time.Sleep(10 * time.Microsecond)
+	resp, err := liftingserial.ReadDataATC(nTimeOut)
+	if err != nil {
+		return "", err
+	}
+	FDLogger.Printf("cmd:%s--> resp: %s\n", cmd, resp)
+	if strings.Contains(resp, "OK\r") {
+		return resp, nil
+	}
+	return "", fmt.Errorf("not found OK: %s", resp)
+}
+
 func setNeedSleepFlag() {
 	muxWait.Lock()
 	bNeedSleep = true
@@ -287,7 +308,7 @@ func home(c *gin.Context) {
 	if err != nil {
 		interval = 1
 	}
-	resp, err := sendSerialData(cmd, 10, interval)
+	resp, err := sendSerialDataATC(cmd, 10, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

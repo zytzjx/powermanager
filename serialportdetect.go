@@ -169,6 +169,50 @@ func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 }
 
 // ReadData read from usb port
+func (sp *SerialPort) ReadDataATC(nTimeout int32) (string, error) {
+	resp := make(chan string)
+	err := make(chan error)
+	go func(resp chan string, errr chan error) {
+		buf := make([]byte, 4096)
+		cnt := 0
+		for {
+			time.Sleep(10 * time.Microsecond)
+			n, err := func() (int, error) {
+				// sp.mux.Lock()
+				// defer sp.mux.Unlock()
+				return sp.serialopen.Read(buf[cnt:])
+			}()
+
+			if err != nil {
+				FDLogger.Println("Error reading from serial port: ", err)
+				errr <- err
+				return
+			}
+			cnt += n
+			FDLogger.Println(buf[0:cnt])
+			// if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
+			if cnt > 3 {
+				break
+			}
+		}
+
+		resp <- string(buf[:cnt])
+
+	}(resp, err)
+
+	select {
+	case strResp := <-resp:
+		FDLogger.Println(strResp)
+		return strResp, nil
+	case errret := <-err:
+		FDLogger.Println(errret)
+		return "", errret
+	case <-time.After(time.Duration(nTimeout) * time.Second):
+		return "", errors.New("recv data timeout")
+	}
+}
+
+// ReadData read from usb port
 func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 	resp := make(chan string)
 	err := make(chan error)
