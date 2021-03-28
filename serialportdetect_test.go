@@ -1,12 +1,26 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
 )
 
+func TestByteStringCheck(t *testing.T) {
+	buf := []byte{65, 84, 71, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 71, 48, 13, 10, 82, 85, 78, 78, 73, 78, 71, 13, 10, 65, 84, 87, 49, 13, 10, 65, 84, 71, 45, 49, 13, 79, 75, 13, 10}
+	bytesReader := bytes.NewReader(buf)
+	bufReader := bufio.NewReader(bytesReader)
+	for {
+		value1, _, err := bufReader.ReadLine()
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Println(string(value1))
+	}
+}
 func TestByteArray(t *testing.T) {
 	buf := []byte{65, 84, 71, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 71, 48, 13, 10, 82, 85, 78, 78, 73, 78, 71, 13, 10, 65, 84, 87, 49, 13, 10, 65, 84, 71, 45, 49, 13, 79, 75, 13, 10}
 	if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {

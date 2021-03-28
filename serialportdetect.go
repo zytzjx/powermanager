@@ -12,7 +12,6 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -240,7 +239,8 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 				return
 			}
 			cnt += n
-			FDLogger.Println(buf[0:cnt])
+			// FDLogger.Println(buf[0:cnt])
+			FDLogger.Println(hex.Dump(buf[0:cnt]))
 			if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
 				break
 			}
@@ -330,6 +330,7 @@ func IsPowerSerial(sname string, baudrate int) bool {
 	return false
 }
 
+/*
 func (usp *USBSERIALPORTS) getDevBus(path string) (int, int, error) {
 	pathes := strings.Split(path, "-")
 	if len(pathes) < 2 {
@@ -346,7 +347,7 @@ func (usp *USBSERIALPORTS) getDevBus(path string) (int, int, error) {
 	}
 	return busindex, nDev, nil
 }
-
+*/
 // LoadConfig load config from config file
 func (usp *USBSERIALPORTS) LoadConfig(filename string) error {
 	// RunLsusb()
@@ -477,7 +478,7 @@ func (usp *USBSERIALPORTS) getDeviceLocationpath(devName string) (string, error)
 		FDLogger.Printf("Failed to execute command: %s\n", err)
 		return "", err
 	}
-	re := regexp.MustCompile(".*/(.*?)/(.*?):.*?/ttyUSB\\d+/")
+	re := regexp.MustCompile(`.*/(.*?)/(.*?):.*?/ttyUSB\\d+/`)
 	pathes := re.FindStringSubmatch(string(out))
 	if len(pathes) > 2 {
 		return pathes[1], nil
@@ -545,6 +546,7 @@ func (usp *USBSERIALPORTS) VerifyDevName() error {
 	return nil
 }
 
+/*
 func (usp *USBSERIALPORTS) verifyDevName() error {
 	if err := usp.GetDevUsbList(); err != nil {
 		return err
@@ -594,3 +596,4 @@ func (usp *USBSERIALPORTS) verifyDevName() error {
 	}
 	return nil
 }
+*/

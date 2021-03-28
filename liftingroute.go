@@ -68,7 +68,7 @@ func sendSerialData(cmd string, nTimeOut int32, interval int) (string, error) {
 		return "", err
 	}
 	FDLogger.Printf("cmd:%s--> resp: %s\n", cmd, resp)
-	if strings.Contains(resp, "OK\r") {
+	if strings.Contains(resp, "OK") {
 		return resp, nil
 	}
 	return "", fmt.Errorf("not found OK: %s", resp)
@@ -89,7 +89,7 @@ func sendSerialDataATC(cmd string, nTimeOut int32, interval int) (string, error)
 		return "", err
 	}
 	FDLogger.Printf("cmd:%s--> resp: %s\n", cmd, resp)
-	if strings.Contains(resp, "OK\r") {
+	if strings.Contains(resp, "OK") {
 		return resp, nil
 	}
 	return "", fmt.Errorf("not found OK: %s", resp)
@@ -98,11 +98,11 @@ func sendSerialDataATC(cmd string, nTimeOut int32, interval int) (string, error)
 func setNeedSleepFlag() {
 	muxWait.Lock()
 	bNeedSleep = true
-	muxWait.Unlock()
+	// muxWait.Unlock()
 }
 
 func waitSleepFlag() {
-	muxWait.Lock()
+	// muxWait.Lock()
 	time.Sleep(time.Duration(200) * time.Microsecond)
 	bNeedSleep = false
 	muxWait.Unlock()

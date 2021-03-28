@@ -10,11 +10,12 @@ import (
 	"strings"
 )
 
+/*
 type addchild interface {
 	AddChild(cd *ChildDevice)
 	LastChild() *ChildDevice
 }
-
+*/
 // ChildDevice is USB device include USBHUB
 type ChildDevice struct {
 	Level    int
