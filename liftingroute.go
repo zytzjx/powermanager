@@ -16,6 +16,7 @@ var liftingserial *SerialPort
 var liftMutex = &sync.Mutex{}
 var muxWait = &sync.Mutex{}
 var bNeedSleep = false
+var INTERVAL = 220
 
 // TurnFlik record flik
 type TurnFlik struct {
@@ -103,14 +104,14 @@ func setNeedSleepFlag() {
 
 func waitSleepFlag() {
 	// muxWait.Lock()
-	time.Sleep(time.Duration(200) * time.Microsecond)
+	time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	bNeedSleep = false
 	muxWait.Unlock()
 }
 
 func hello(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -142,7 +143,7 @@ func hello(c *gin.Context) {
 
 func status(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -174,7 +175,7 @@ func status(c *gin.Context) {
 
 func information(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -215,7 +216,7 @@ func information(c *gin.Context) {
 
 func stop(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -247,7 +248,7 @@ func stop(c *gin.Context) {
 
 func reset(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -279,7 +280,7 @@ func reset(c *gin.Context) {
 
 func home(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -324,7 +325,7 @@ func home(c *gin.Context) {
 
 func wind(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -358,7 +359,7 @@ func wind(c *gin.Context) {
 
 func carrier(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -398,7 +399,7 @@ type PositionInfo struct {
 
 func goposition(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -439,7 +440,7 @@ func goposition(c *gin.Context) {
 
 func setPoisition(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -495,7 +496,7 @@ func setPoisition(c *gin.Context) {
 
 func listposition(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -543,7 +544,7 @@ func listposition(c *gin.Context) {
 
 func turn(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
@@ -586,7 +587,7 @@ func turn(c *gin.Context) {
 
 func flip(c *gin.Context) {
 	if bNeedSleep {
-		time.Sleep(time.Duration(200) * time.Microsecond)
+		time.Sleep(time.Duration(INTERVAL) * time.Microsecond)
 	}
 	liftMutex.Lock()
 	defer liftMutex.Unlock()

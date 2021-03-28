@@ -8,6 +8,31 @@ import (
 	"testing"
 )
 
+func TestStringLines(t *testing.T) {
+	s := "OK"
+	if s == "OK" {
+		fmt.Println("OK found")
+	}
+	buf := []byte{65, 84, 71, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 71, 48, 13, 10, 82, 85, 78, 78, 73, 78, 71, 13, 10, 65, 84, 87, 49, 13, 10, 65, 84, 71, 45, 49, 13, 79, 75, 13, 10}
+	bytesReader := bytes.NewReader(buf)
+	line := bufio.NewScanner(bytesReader)
+	line.Split(ScanItems)
+	for line.Scan() {
+		fmt.Println(line.Text())
+	}
+	/*
+		ATG0
+		ATW0
+		ATW0
+		ATG0
+		RUNNING
+		ATW1
+		ATG-1
+		OK
+		PASS
+	*/
+}
+
 func TestByteStringCheck(t *testing.T) {
 	buf := []byte{65, 84, 71, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 87, 48, 13, 10, 65, 84, 71, 48, 13, 10, 82, 85, 78, 78, 73, 78, 71, 13, 10, 65, 84, 87, 49, 13, 10, 65, 84, 71, 45, 49, 13, 79, 75, 13, 10}
 	bytesReader := bytes.NewReader(buf)

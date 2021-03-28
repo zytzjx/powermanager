@@ -32,6 +32,21 @@ type SerialPort struct {
 
 var nRecordATCError int
 
+func ScanItems(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.IndexAny(data, "\r\n"); i >= 0 {
+		return i + 1, data[0:i], nil
+	}
+
+	if atEOF {
+		return len(data), data, nil
+	}
+
+	return 0, nil, nil
+}
+
 // Open open serial port
 func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 	sp.IsOpened = false
@@ -72,15 +87,7 @@ func (sp *SerialPort) WriteData(data []byte) (int, error) {
 	// FDLogger.Printf("%v\n", data)
 	s := string(data)
 	FDLogger.Println(s)
-	// for i := 0; i < len(data); i++ {
-	// 	sp.serialopen.Write(data[i : i+1])
-	// 	time.Sleep(1 * time.Microsecond)
-	// }
 	return sp.serialopen.Write(data)
-	// n, err := sp.serialopen.Write(data)
-	// sp.serialopen.Flush()
-	// return n, err
-	// return len(data), nil
 }
 
 // ReadBytes read bytes from serial port
@@ -192,9 +199,23 @@ func (sp *SerialPort) ReadDataATC(nTimeout int32) (string, error) {
 			}
 			cnt += n
 			FDLogger.Println(hex.Dump(buf[0:cnt]))
-			if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
+			bytesReader := bytes.NewReader(buf[0:cnt])
+			line := bufio.NewScanner(bytesReader)
+			line.Split(ScanItems)
+			var found bool
+			for line.Scan() {
+				s := line.Text()
+				FDLogger.Println(s)
+				if s == "OK" || s == "ERROR" {
+					found = true
+					break
+				}
+			}
+
+			if found || bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR")) {
 				break
 			}
+
 			if cnt > 3 {
 				nRecordATCError++
 				FDLogger.Printf("ATC Return error format: %d\n", nRecordATCError)
@@ -241,7 +262,21 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 			cnt += n
 			// FDLogger.Println(buf[0:cnt])
 			FDLogger.Println(hex.Dump(buf[0:cnt]))
-			if bytes.Contains(buf, []byte("OK\r")) || bytes.Contains(buf, []byte("ERROR")) {
+
+			bytesReader := bytes.NewReader(buf[0:cnt])
+			line := bufio.NewScanner(bytesReader)
+			line.Split(ScanItems)
+			var found bool
+			for line.Scan() {
+				s := line.Text()
+				FDLogger.Println(s)
+				if s == "OK" || s == "ERROR" {
+					found = true
+					break
+				}
+			}
+
+			if found || bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR")) {
 				break
 			}
 		}
