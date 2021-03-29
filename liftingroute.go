@@ -159,7 +159,7 @@ func status(c *gin.Context) {
 	if err != nil {
 		interval = 1
 	}
-	resp, err := sendSerialData(cmd, 1, interval)
+	resp, err := sendSerialData(cmd, 2, interval)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

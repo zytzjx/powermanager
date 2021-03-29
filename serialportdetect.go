@@ -277,6 +277,7 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 			}
 
 			if found || bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR")) {
+				FDLogger.Println("find correct protocol")
 				break
 			}
 		}
