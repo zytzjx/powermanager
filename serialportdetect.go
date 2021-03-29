@@ -137,8 +137,8 @@ func (sp *SerialPort) ReadBytes(nTimeout int32) ([]byte, error) {
 // ReadDataLen read from usb port, timeout is microsecond
 func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 	resp := make(chan string)
-	err := make(chan error)
-	go func(resp chan string, errr chan error) {
+	errchan := make(chan error)
+	go func() {
 		buf := make([]byte, 4096)
 		cnt := 0
 		for {
@@ -151,7 +151,7 @@ func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 
 			if err != nil {
 				FDLogger.Println("Error reading from serial port: ", err)
-				errr <- err
+				errchan <- err
 				return
 			}
 			cnt += n
@@ -163,13 +163,13 @@ func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 
 		resp <- string(buf[:cnt])
 
-	}(resp, err)
+	}()
 
 	select {
 	case strResp := <-resp:
 		FDLogger.Println(strResp)
 		return strResp, nil
-	case errret := <-err:
+	case errret := <-errchan:
 		FDLogger.Println(errret)
 		return "", errret
 	case <-time.After(time.Duration(nTimeout) * time.Second):
