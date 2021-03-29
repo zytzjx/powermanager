@@ -84,7 +84,7 @@ func sendSerialDataATC(cmd string, nTimeOut int32, interval int) (string, error)
 		}
 		time.Sleep(time.Duration(interval) * time.Millisecond)
 	}
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(5 * time.Second)
 	resp, err := liftingserial.ReadDataATC(nTimeOut)
 	if err != nil {
 		return "", err
