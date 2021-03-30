@@ -178,7 +178,7 @@ func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 }
 
 // ReadData read from usb port
-func (sp *SerialPort) ReadDataATC(nTimeout int32) (string, error) {
+func (sp *SerialPort) ReadDataEnd(nTimeout int32) (string, error) {
 	resp := make(chan string)
 	err := make(chan error)
 	go func(resp chan string, errr chan error) {
@@ -215,12 +215,6 @@ func (sp *SerialPort) ReadDataATC(nTimeout int32) (string, error) {
 			if found || bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR")) {
 				break
 			}
-
-			if cnt > 3 {
-				nRecordATCError++
-				FDLogger.Printf("ATC Return error format: %d\n", nRecordATCError)
-				break
-			}
 		}
 
 		resp <- string(buf[:cnt])
@@ -240,9 +234,10 @@ func (sp *SerialPort) ReadDataATC(nTimeout int32) (string, error) {
 }
 
 // ReadData read from usb port
-func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
+func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 	resp := make(chan string)
 	err := make(chan error)
+	cmd1 := strings.TrimSpace(cmd)
 	go func(resp chan string, errr chan error) {
 		buf := make([]byte, 4096)
 		cnt := 0
@@ -267,18 +262,23 @@ func (sp *SerialPort) ReadData(nTimeout int32) (string, error) {
 			line := bufio.NewScanner(bytesReader)
 			line.Split(ScanItems)
 			var found bool
+			var foundcmd bool
 			for line.Scan() {
 				s := line.Text()
 				FDLogger.Println(s)
 				if s == "OK" || s == "ERROR" {
 					found = true
-					break
+				} else if s == cmd1 {
+					foundcmd = true
 				}
 			}
 
-			if found || bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR")) {
+			if found && foundcmd { //|| bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR"))
 				FDLogger.Println("find correct protocol")
 				break
+			}
+			if found {
+				FDLogger.Println("find end but not found command")
 			}
 		}
 

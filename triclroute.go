@@ -27,7 +27,7 @@ func recvStatus() {
 	// var str = `Key: 0, 5, 2`
 	for bexit {
 		time.Sleep(10 * time.Microsecond)
-		resp, err := liftingserial.ReadData(1)
+		resp, err := liftingserial.ReadDataEnd(1)
 		if err != nil {
 			continue
 		}
