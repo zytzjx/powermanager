@@ -445,7 +445,7 @@ func SendATCmd(cmd string, c *gin.Context) {
 	if err != nil {
 		ndelay = 10
 	}
-	resp, err := sendSerialData(cmd, 1, interval, ndelay)
+	resp, err := sendSerialData(cmd, 10, interval, ndelay)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
