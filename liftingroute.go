@@ -269,6 +269,7 @@ func goposition(c *gin.Context) {
 	if c.ShouldBindQuery(&pp) == nil {
 		cmd = fmt.Sprintf("ATG%d\r", pp.Position)
 		SendATCmd(cmd, c)
+		return
 	}
 	c.JSON(http.StatusBadRequest, gin.H{
 		"status":  "Error",
