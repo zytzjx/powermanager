@@ -236,7 +236,7 @@ func (sp *SerialPort) Read(buf []byte) (n int, err error) {
 	go func() {
 		n, err = sp.serialopen.Read(buf)
 		if err == nil {
-			FDLogger.Println(hex.Dump(buf))
+			FDLogger.Println(hex.Dump(buf[:n]))
 		}
 		ch <- true
 	}()
