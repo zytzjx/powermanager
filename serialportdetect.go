@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -16,21 +15,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jacobsa/go-serial/serial"
-	// "github.com/tarm/serial"
+	// "github.com/jacobsa/go-serial/serial"
+	"github.com/tarm/serial"
 )
 
 // SerialPort Serial port
 type SerialPort struct {
-	serialopen io.ReadWriteCloser
-	// serialopen *serial.Port
-	mux      *sync.Mutex
-	portname string
-	baudrate int
-	IsOpened bool
+	// serialopen io.ReadWriteCloser
+	serialopen *serial.Port
+	mux        *sync.Mutex
+	portname   string
+	baudrate   int
+	IsOpened   bool
 }
 
-var nRecordATCError int
+// var nRecordATCError int
 
 func ScanItems(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
@@ -50,20 +49,20 @@ func ScanItems(data []byte, atEOF bool) (advance int, token []byte, err error) {
 // Open open serial port
 func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 	sp.IsOpened = false
-	// options := &serial.Config{Name: PortName, Baud: BaudRate}
-	options := serial.OpenOptions{
-		PortName:        PortName,
-		BaudRate:        uint(BaudRate),
-		DataBits:        8,
-		StopBits:        1,
-		MinimumReadSize: 4,
-	}
+	options := &serial.Config{Name: PortName, Baud: BaudRate}
+	// options := serial.OpenOptions{
+	// 	PortName:        PortName,
+	// 	BaudRate:        uint(BaudRate),
+	// 	DataBits:        8,
+	// 	StopBits:        1,
+	// 	MinimumReadSize: 4,
+	// }
 	sp.portname = PortName
 	sp.baudrate = BaudRate
 
 	// Open the port.
-	port, err := serial.Open(options)
-	// port, err := serial.OpenPort(options)
+	// port, err := serial.Open(options)
+	port, err := serial.OpenPort(options)
 	if err != nil {
 		log.Fatalf("serial.Open: %v", err)
 		return err
