@@ -238,10 +238,11 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 	resp := make(chan string)
 	err := make(chan error)
 	cmd1 := strings.TrimSpace(cmd)
+	bExit := false
 	go func(resp chan string, errr chan error) {
 		buf := make([]byte, 4096)
 		cnt := 0
-		for {
+		for !bExit {
 			time.Sleep(10 * time.Microsecond)
 			n, err := func() (int, error) {
 				// sp.mux.Lock()
@@ -264,7 +265,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 			var found bool
 			var foundcmd bool
 			for line.Scan() {
-				s := line.Text()
+				s := strings.TrimSpace(line.Text())
 				FDLogger.Println(s)
 				if s == "OK" || s == "ERROR" {
 					found = true
@@ -294,6 +295,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 		FDLogger.Println(errret)
 		return "", errret
 	case <-time.After(time.Duration(nTimeout) * time.Second):
+		bExit = true
 		return "", errors.New("recv data timeout")
 	}
 }
