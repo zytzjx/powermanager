@@ -100,8 +100,6 @@ func (sp *SerialPort) ReadBytes(nTimeout int32) ([]byte, error) {
 		for {
 			time.Sleep(10 * time.Microsecond)
 			n, err := func() (int, error) {
-				// sp.mux.Lock()
-				// defer sp.mux.Unlock()
 				return sp.serialopen.Read(buf[cnt:])
 			}()
 
@@ -144,8 +142,6 @@ func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 		for {
 			time.Sleep(10 * time.Microsecond)
 			n, err := func() (int, error) {
-				// sp.mux.Lock()
-				// defer sp.mux.Unlock()
 				return sp.serialopen.Read(buf[cnt:])
 			}()
 
@@ -238,15 +234,12 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 	resp := make(chan string)
 	err := make(chan error)
 	cmd1 := strings.TrimSpace(cmd)
-	bExit := false
 	go func(resp chan string, errr chan error) {
 		buf := make([]byte, 4096)
 		cnt := 0
-		for !bExit {
+		for {
 			time.Sleep(10 * time.Microsecond)
 			n, err := func() (int, error) {
-				// sp.mux.Lock()
-				// defer sp.mux.Unlock()
 				return sp.serialopen.Read(buf[cnt:])
 			}()
 
@@ -256,7 +249,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 				return
 			}
 			cnt += n
-			// FDLogger.Println(buf[0:cnt])
+
 			FDLogger.Println(hex.Dump(buf[0:cnt]))
 
 			bytesReader := bytes.NewReader(buf[0:cnt])
@@ -280,11 +273,11 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 			}
 			if found {
 				FDLogger.Println("find end but not found command")
+				errr <- errors.New("communication protocol failed")
+				return
 			}
 		}
-
 		resp <- string(buf[:cnt])
-
 	}(resp, err)
 
 	select {
@@ -295,7 +288,6 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 		FDLogger.Println(errret)
 		return "", errret
 	case <-time.After(time.Duration(nTimeout) * time.Second):
-		bExit = true
 		return "", errors.New("recv data timeout")
 	}
 }
