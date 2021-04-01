@@ -242,7 +242,7 @@ func (sp *SerialPort) Read(buf []byte) (n int, err error) {
 	select {
 	case <-ch:
 		return
-	case <-time.After(1 * time.Second):
+	case <-time.After(3 * time.Second):
 		return 0, errors.New("Timeout")
 	}
 }
