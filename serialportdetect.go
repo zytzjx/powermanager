@@ -229,21 +229,38 @@ func (sp *SerialPort) ReadDataEnd(nTimeout int32) (string, error) {
 	}
 }
 
+func (sp *SerialPort) Read(buf []byte) (n int, err error) {
+	ch := make(chan bool)
+	n = 0
+	err = nil
+	go func() {
+		n, err = sp.serialopen.Read(buf)
+		ch <- true
+	}()
+	select {
+	case <-ch:
+		return
+	case <-time.After(5 * time.Second):
+		return 0, errors.New("Timeout")
+	}
+}
+
 // ReadData read from usb port
 func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 	resp := make(chan string)
 	err := make(chan error)
 	cmd1 := strings.TrimSpace(cmd)
+	bExitTimout := false
 	go func(resp chan string, errr chan error) {
 		buf := make([]byte, 4096)
 		cnt := 0
 		for {
 			time.Sleep(10 * time.Microsecond)
-			n, err := func() (int, error) {
-				return sp.serialopen.Read(buf[cnt:])
-			}()
-
-			if err != nil {
+			// n, err := func() (int, error) {
+			// 	return sp.serialopen.Read(buf[cnt:])
+			// }()
+			n, err := sp.Read(buf[cnt:])
+			if err != nil && bExitTimout {
 				FDLogger.Println("Error reading from serial port: ", err)
 				errr <- err
 				return
@@ -288,6 +305,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 		FDLogger.Println(errret)
 		return "", errret
 	case <-time.After(time.Duration(nTimeout) * time.Second):
+		bExitTimout = true
 		return "", errors.New("recv data timeout")
 	}
 }
