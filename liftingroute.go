@@ -444,6 +444,9 @@ func SendATCmd(cmd string, c *gin.Context) {
 	ndelay, err := strconv.Atoi(sdelay)
 	if err != nil {
 		ndelay = 10
+		if strings.HasPrefix(cmd, "ATC") {
+			ndelay = 5000
+		}
 	}
 	resp, err := sendSerialData(cmd, 10, interval, ndelay)
 	if err != nil {

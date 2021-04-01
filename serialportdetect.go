@@ -235,12 +235,15 @@ func (sp *SerialPort) Read(buf []byte) (n int, err error) {
 	err = nil
 	go func() {
 		n, err = sp.serialopen.Read(buf)
+		if err == nil {
+			FDLogger.Println(hex.Dump(buf))
+		}
 		ch <- true
 	}()
 	select {
 	case <-ch:
 		return
-	case <-time.After(5 * time.Second):
+	case <-time.After(1 * time.Second):
 		return 0, errors.New("Timeout")
 	}
 }
@@ -266,8 +269,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 				return
 			}
 			cnt += n
-
-			FDLogger.Println(hex.Dump(buf[0:cnt]))
+			// FDLogger.Println(hex.Dump(buf[0:cnt]))
 
 			bytesReader := bytes.NewReader(buf[0:cnt])
 			line := bufio.NewScanner(bytesReader)
