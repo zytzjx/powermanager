@@ -259,7 +259,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 			var foundcmd bool
 			for line.Scan() {
 				s := strings.TrimSpace(line.Text())
-				FDLogger.Println(s)
+				FDLogger.Println(cmd1 + "    " + s)
 				if s == "OK" || s == "ERROR" {
 					found = true
 				} else if s == cmd1 {
@@ -271,7 +271,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 				FDLogger.Println("find correct protocol")
 				break
 			}
-			if found {
+			if found && !foundcmd {
 				FDLogger.Println("find end but not found command")
 				errr <- errors.New("communication protocol failed")
 				return
