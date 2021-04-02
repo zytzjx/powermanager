@@ -257,11 +257,11 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 		buf := make([]byte, 4096)
 		cnt := 0
 		for {
-			time.Sleep(10 * time.Microsecond)
-			n, err := func() (int, error) {
-				return sp.serialopen.Read(buf[cnt:])
-			}()
-			// n, err := sp.Read(buf[cnt:])
+			time.Sleep(5 * time.Microsecond)
+			// n, err := func() (int, error) {
+			// 	return sp.serialopen.Read(buf[cnt:])
+			// }()
+			n, err := sp.Read(buf[cnt:])
 			if err != nil {
 				FDLogger.Println("Error reading from serial port: ", err)
 				errr <- err
