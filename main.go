@@ -18,7 +18,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.4.1.2"
+const VERSION = "21.4.1.4"
 
 // var port io.ReadWriteCloser
 var (
@@ -79,7 +79,7 @@ func main() {
 	FDLogger.Println("http://ip:8010/")
 	usbserialList := USBSERIALPORTS{}
 	powerserial = &SerialPort{mux: &sync.Mutex{}}
-	liftingserial = &SerialPort{mux: &sync.Mutex{}}
+	liftingserial = &ASerialPort{}
 	levelserial = &SerialPort{mux: &sync.Mutex{}}
 
 	if usbserialList.LoadConfig("serialcalibration.json") == nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var liftingserial *SerialPort
+var liftingserial *ASerialPort
 var liftMutex = &sync.Mutex{}
 var muxWait = &sync.Mutex{}
 
@@ -59,6 +59,26 @@ func sendSerialData(cmd string, nTimeOut int32, interval int, delay int) (string
 	FDLogger.Printf("\ncmd:%s, timeout:%d, interval:%d\n", cmd, nTimeOut, interval)
 	liftingserial.serialopen.Flush()
 	bbcmd := []byte(cmd)
+	if _, err := liftingserial.WriteData(bbcmd); err != nil {
+		return "", err
+	}
+	time.Sleep(time.Duration(delay) * time.Millisecond)
+	resp, err := liftingserial.ReadATCmd(strings.TrimSpace(cmd), int(nTimeOut))
+	if err != nil {
+		return "", err
+	}
+	FDLogger.Printf("cmd:%s--> resp: %s\n", cmd, resp)
+	if strings.Contains(resp, "OK") {
+		return resp, nil
+	}
+	return "", fmt.Errorf("not found OK: %s", resp)
+}
+
+/*
+func sendSerialData_(cmd string, nTimeOut int32, interval int, delay int) (string, error) {
+	FDLogger.Printf("\ncmd:%s, timeout:%d, interval:%d\n", cmd, nTimeOut, interval)
+	liftingserial.serialopen.Flush()
+	bbcmd := []byte(cmd)
 	for i := 0; i < len(bbcmd); i++ {
 		if _, err := liftingserial.WriteData(bbcmd[i : i+1]); err != nil {
 			return "", err
@@ -76,7 +96,7 @@ func sendSerialData(cmd string, nTimeOut int32, interval int, delay int) (string
 	}
 	return "", fmt.Errorf("not found OK: %s", resp)
 }
-
+*/
 // func sendSerialDataATC(cmd string, nTimeOut int32, interval int, delay int) (string, error) {
 // 	FDLogger.Printf("\ncmd:%s, timeout:%d, interval:%d\n", cmd, nTimeOut, interval)
 // 	bbcmd := []byte(cmd)
