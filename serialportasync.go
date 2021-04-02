@@ -28,6 +28,7 @@ type ASerialPort struct {
 func (sp *ASerialPort) ClearBuffer() {
 	sp.muxqueue.Lock()
 	defer sp.muxqueue.Unlock()
+	sp.serialopen.Flush()
 	sp.queue = sp.queue[0:0]
 }
 

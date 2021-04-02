@@ -57,7 +57,7 @@ var turncmd *TurnFlik = NewTurnFlik("ATT")
 
 func sendSerialData(cmd string, nTimeOut int32, interval int, delay int) (string, error) {
 	FDLogger.Printf("\ncmd:%s, timeout:%d, interval:%d\n", cmd, nTimeOut, interval)
-	liftingserial.serialopen.Flush()
+	liftingserial.ClearBuffer()
 	bbcmd := []byte(cmd)
 	if _, err := liftingserial.WriteData(bbcmd); err != nil {
 		return "", err
