@@ -252,23 +252,23 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 	resp := make(chan string)
 	err := make(chan error)
 	cmd1 := strings.TrimSpace(cmd)
-	bExitTimout := false
+	// bExitTimout := false
 	go func(resp chan string, errr chan error) {
 		buf := make([]byte, 4096)
 		cnt := 0
 		for {
 			time.Sleep(10 * time.Microsecond)
-			// n, err := func() (int, error) {
-			// 	return sp.serialopen.Read(buf[cnt:])
-			// }()
-			n, err := sp.Read(buf[cnt:])
-			if err != nil && bExitTimout {
+			n, err := func() (int, error) {
+				return sp.serialopen.Read(buf[cnt:])
+			}()
+			// n, err := sp.Read(buf[cnt:])
+			if err != nil {
 				FDLogger.Println("Error reading from serial port: ", err)
 				errr <- err
 				return
 			}
 			cnt += n
-			// FDLogger.Println(hex.Dump(buf[0:cnt]))
+			FDLogger.Println(hex.Dump(buf[0:cnt]))
 
 			bytesReader := bytes.NewReader(buf[0:cnt])
 			line := bufio.NewScanner(bytesReader)
@@ -306,7 +306,7 @@ func (sp *SerialPort) ReadData(cmd string, nTimeout int32) (string, error) {
 		FDLogger.Println(errret)
 		return "", errret
 	case <-time.After(time.Duration(nTimeout) * time.Second):
-		bExitTimout = true
+		// bExitTimout = true
 		return "", errors.New("recv data timeout")
 	}
 }
