@@ -446,7 +446,7 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfig() error {
 		return errors.New("not find ttyUSB serial port")
 	}
 	// 1 or 2 USB
-	if len(usp.ttyUSB) < 4 {
+	if len(usp.ttyUSB) > 2 {
 		for _, devname := range usp.ttyUSB {
 			infos, err := DevsInfo(devname)
 			if err != nil {

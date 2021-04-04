@@ -4,11 +4,13 @@ package main
 
 import (
 	"context"
+	"flag"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -18,7 +20,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.4.1.4"
+const VERSION = "21.4.3.2"
 
 // var port io.ReadWriteCloser
 var (
@@ -73,7 +75,22 @@ func HomePage(c *gin.Context) {
 	})
 }
 
+func filterMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sPath := c.Request.URL.Path
+		if strings.HasPrefix(sPath, "/lift") && liftingserial.portname == "" {
+			c.AbortWithStatusJSON(401, gin.H{
+				"msg": "not config lift port",
+			})
+			return
+		}
+		c.Next()
+	}
+}
+
 func main() {
+	liftport := flag.String("lifter", "", "lifter serial port")
+	flag.Parse()
 	Init()
 	FDLogger.Println("version:" + VERSION)
 	FDLogger.Println("http://ip:8010/")
@@ -117,9 +134,12 @@ func main() {
 	// if usbserialList.serialLifting == "" {
 	// 	usbserialList.serialLifting = "/dev/ttyS0"
 	// }
+	FDLogger.Println("lift port:" + usbserialList.serialLifting)
+	usbserialList.serialLifting = *liftport
+	FDLogger.Println("after lift port:" + usbserialList.serialLifting)
 	if usbserialList.serialLifting != "" { // 115200 lifting,
 		if err := liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate); err != nil {
-			FDLogger.Fatalf("open power control fail: %s\n", err)
+			FDLogger.Fatalf("open lift control fail: %s\n", err)
 			return
 		}
 		defer liftingserial.Close()
@@ -129,6 +149,7 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	router.Use(filterMiddleware())
 	router.GET("/", HomePage)
 	router.POST("/exitsystem", exit)
 	v1 := router.Group("/lift")
