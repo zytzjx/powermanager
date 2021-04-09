@@ -105,7 +105,8 @@ func main() {
 			return
 		}
 	} else {
-		usbserialList.LoadUSBDevsWithoutConfig()
+		// usbserialList.LoadUSBDevsWithoutConfig()
+		usbserialList.LoadUSBDevsWithoutConfigV1()
 		powerserial.portname = usbserialList.serialPower
 		powerserial.baudrate = usbserialList.PBaudRate
 		liftingserial.portname = usbserialList.serialLifting

@@ -16,13 +16,16 @@ import (
 	"time"
 
 	// "github.com/jacobsa/go-serial/serial"
-	"github.com/tarm/serial"
+	//"github.com/tarm/serial"
+	"go.bug.st/serial"
+	"go.bug.st/serial/enumerator"
 )
 
 // SerialPort Serial port
 type SerialPort struct {
 	// serialopen io.ReadWriteCloser
-	serialopen *serial.Port
+	//serialopen *serial.Port
+	serialopen serial.Port
 	mux        *sync.Mutex
 	portname   string
 	baudrate   int
@@ -49,7 +52,7 @@ func ScanItems(data []byte, atEOF bool) (advance int, token []byte, err error) {
 // Open open serial port
 func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 	sp.IsOpened = false
-	options := &serial.Config{Name: PortName, Baud: BaudRate}
+	// options := &serial.Config{Name: PortName, Baud: BaudRate}
 	// options := serial.OpenOptions{
 	// 	PortName:        PortName,
 	// 	BaudRate:        uint(BaudRate),
@@ -62,7 +65,8 @@ func (sp *SerialPort) Open(PortName string, BaudRate int) error {
 
 	// Open the port.
 	// port, err := serial.Open(options)
-	port, err := serial.OpenPort(options)
+	// port, err := serial.OpenPort(options)
+	port, err := serial.Open(PortName, &serial.Mode{BaudRate: sp.baudrate})
 	if err != nil {
 		log.Fatalf("serial.Open: %v", err)
 		return err
@@ -435,6 +439,47 @@ func DevsInfo(DevName string) (map[string]string, error) {
 		}
 	}
 	return infos, nil
+}
+
+func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfigV1() error {
+	ports, err := enumerator.GetDetailedPortsList()
+	if err != nil {
+		return err
+	}
+	if len(ports) < 3 {
+		FDLogger.Println("Not All serial ports found!")
+		return errors.New("not all serial ports found")
+	}
+	for _, port := range ports {
+		FDLogger.Printf("Found port: %s\n", port.Name)
+		if port.IsUSB {
+			FDLogger.Printf("   USB ID     %s:%s\n", port.VID, port.PID)
+			FDLogger.Printf("   USB serial %s\n", port.SerialNumber)
+			var bch340 bool
+			if port.VID == "1a86" && port.PID == "7523" {
+				bch340 = true
+			} else if port.VID == "0403" && port.PID == "6001" {
+				usp.serialLifting = port.Name
+				usp.LBaudRate = 115200
+				FDLogger.Printf("Found lifting: %s\n", port.Name)
+
+			}
+
+			if bch340 {
+				if usp.serialVoltage == "" && IsVoltageController(port.Name, 9600) {
+					usp.serialVoltage = port.Name
+					usp.LevelBRate = 9600
+					FDLogger.Printf("Found power supply: %s\n", port.Name)
+				} else {
+					usp.serialPower = port.Name
+					usp.PBaudRate = 9600
+					FDLogger.Printf("Found arduino: %s\n", port.Name)
+				}
+			}
+
+		}
+	}
+	return nil
 }
 
 // LoadUSBDevsWithoutConfig if not found USB config

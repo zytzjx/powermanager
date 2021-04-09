@@ -10,13 +10,15 @@ import (
 	"time"
 
 	// "github.com/jacobsa/go-serial/serial"
-	"github.com/tarm/serial"
+	// "github.com/tarm/serial"
+	"go.bug.st/serial"
 )
 
 // SerialPort Serial port
 type ASerialPort struct {
 	// serialopen io.ReadWriteCloser
-	serialopen *serial.Port
+	// serialopen *serial.Port
+	serialopen serial.Port
 	mux        *sync.Mutex
 	portname   string
 	baudrate   int
@@ -28,7 +30,9 @@ type ASerialPort struct {
 func (sp *ASerialPort) ClearBuffer() {
 	sp.muxqueue.Lock()
 	defer sp.muxqueue.Unlock()
-	sp.serialopen.Flush()
+	// sp.serialopen.Flush()
+	sp.serialopen.ResetInputBuffer()
+	sp.serialopen.ResetOutputBuffer()
 	sp.queue = sp.queue[0:0]
 }
 
@@ -124,14 +128,15 @@ func (sp *ASerialPort) Open(PortName string, BaudRate int) error {
 	sp.mux = &sync.Mutex{}
 	sp.muxqueue = &sync.Mutex{}
 	sp.IsOpened = false
-	options := &serial.Config{Name: PortName, Baud: BaudRate}
+	// options := &serial.Config{Name: PortName, Baud: BaudRate}
 
 	sp.portname = PortName
 	sp.baudrate = BaudRate
 
 	// Open the port.
 	// port, err := serial.Open(options)
-	port, err := serial.OpenPort(options)
+	// port, err := serial.OpenPort(options)
+	port, err := serial.Open(sp.portname, &serial.Mode{BaudRate: sp.baudrate})
 	if err != nil {
 		log.Fatalf("serial.Open: %v", err)
 		return err
@@ -153,7 +158,9 @@ func (sp *ASerialPort) Close() {
 func (sp *ASerialPort) Flush() {
 	sp.mux.Lock()
 	defer sp.mux.Unlock()
-	sp.serialopen.Flush()
+	// sp.serialopen.Flush()
+	sp.serialopen.ResetInputBuffer()
+	sp.serialopen.ResetOutputBuffer()
 }
 
 // WriteData port
