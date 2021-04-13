@@ -75,26 +75,26 @@ http://localhost:8010/lift/status
 Command: ATS  
 
 http://localhost:8010/lift/info  
-Command: ATI
+Command: ATI   
 
 http://localhost:8010/lift/position  
 http://localhost:8010/lift/position?p=[-1..9]  
-Command: ATP? or ATPn?
+Command: ATP? or ATPn?   
 
 http://localhost:8010/lift/setpos?p=[-1..9]&value=+2345.1234  
-Command: ATP0=+2345.1234
+Command: ATP0=+2345.1234   
 
 http://localhost:8010/lift/go?p=[-1..9]  
-Command: ATG0
+Command: ATG0  
 
 http://localhost:8010/lift/flip?flag=[+-]    
-Command: ATF+/ATF-
+Command: ATF+/ATF-  
 
 http://localhost:8010/lift/turn?flag=[+-]    
-Command: ATT+/ATT-
+Command: ATT+/ATT-  
 
 http://localhost:8010/lift/home?flag=[123]  
-Command: ATC1/ATC2/ATC3 
+Command: ATC1/ATC2/ATC3  
 
 http://localhost:8010/lift/reset  
 Command: ATZ  
@@ -102,14 +102,14 @@ Command: ATZ
 http://localhost:8010/lift/stop  
 Command: ATSTOP    
 
-http://localhost:8010/lift/wind?flag=[01]
-Command: ATW[01]
+http://localhost:8010/lift/wind?flag=[01]  
+Command: ATW[01]  
 
-http://localhost:8010/lift/carrier?flag=[01]
-Command: ATX[01]
+http://localhost:8010/lift/carrier?flag=[01]  
+Command: ATX[01]  
 
 http://localhost:8010/lift/reconnect  
-reconnect serial . close and reopen
+reconnect serial . close and reopen  
 
 
 http://localhost:8010/exitsystem  
