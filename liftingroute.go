@@ -224,6 +224,32 @@ func reset(c *gin.Context) {
 	SendATCmd(cmd, c)
 }
 
+func getlasterror(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
+	defer func() {
+		go waitSleepFlag()
+	}()
+	setNeedSleepFlag()
+
+	cmd := "ATE?\r"
+	SendATCmd(cmd, c)
+}
+
+func start(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
+	defer func() {
+		go waitSleepFlag()
+	}()
+	setNeedSleepFlag()
+
+	cmd := "ATSTART\r"
+	SendATCmd(cmd, c)
+}
+
 func home(c *gin.Context) {
 	liftMutex.Lock()
 	defer liftMutex.Unlock()

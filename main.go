@@ -20,7 +20,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.4.8.0"
+const VERSION = "21.4.15.0"
 
 // var port io.ReadWriteCloser
 var (
@@ -162,6 +162,8 @@ func main() {
 		v1.GET("/go", goposition)
 		v1.GET("/home", home)
 		v1.GET("/reset", reset)
+		v1.GET("/getlasterror", getlasterror)
+		v1.GET("/start", start)
 		v1.GET("/stop", stop)
 		v1.GET("/flip", flip)
 		v1.GET("/turn", turn)

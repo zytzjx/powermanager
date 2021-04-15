@@ -102,6 +102,13 @@ Command: ATZ
 http://localhost:8010/lift/stop  
 Command: ATSTOP    
 
+http://localhost:8010/lift/getlasterror  
+Command: ATE?      
+
+http://localhost:8010/lift/start  
+Command: ATSTART    
+
+
 http://localhost:8010/lift/wind?flag=[01]  
 Command: ATW[01]  
 
