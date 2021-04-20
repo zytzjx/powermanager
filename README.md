@@ -109,10 +109,10 @@ http://localhost:8010/lift/start
 Command: ATSTART    
 
 
-http://localhost:8010/lift/wind?flag=[01]  
+http://localhost:8010/lift/wind?flag=[01]   
 Command: ATW[01]  
 
-http://localhost:8010/lift/carrier?flag=[01]  
+http://localhost:8010/lift/carrier?flag=[01]   
 Command: ATX[01]  
 
 http://localhost:8010/lift/reconnect  
