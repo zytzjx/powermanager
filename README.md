@@ -145,8 +145,8 @@ http://localhost:8010/level/poweroff
 
 ### tricolored light
 http://localhost:8010/tricl/green  
-http://localhost:8010/tricl/yollow  
-http://localhost:8010/tricl/read  
+http://localhost:8010/tricl/yellow  
+http://localhost:8010/tricl/red  
 
 if you want to light multi LED. you can use  
    http://localhost:8010/x?on=1  x is 2,3,7
