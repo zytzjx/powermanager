@@ -20,7 +20,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.4.15.0"
+const VERSION = "21.5.13.0"
 
 // var port io.ReadWriteCloser
 var (
@@ -170,6 +170,7 @@ func main() {
 		v1.GET("/setpos", setPoisition)
 		v1.GET("/wind", wind)
 		v1.GET("/carrier", carrier)
+		v1.GET("/queryair", queryAirValue)
 		v1.GET("/reconnect", func(c *gin.Context) {
 			liftingserial.Close()
 			FDLogger.Println("Close lifting port")

@@ -81,6 +81,10 @@ http://localhost:8010/lift/position
 http://localhost:8010/lift/position?p=[-1..9]  
 Command: ATP? or ATPn?   
 
+Query Air Compress Value    
+http://localhost:8010/lift/queryair   
+Command: ATQ
+
 http://localhost:8010/lift/setpos?p=[-1..9]&value=+2345.1234  
 Command: ATP0=+2345.1234   
 

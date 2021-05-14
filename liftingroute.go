@@ -383,6 +383,42 @@ func setPoisition(c *gin.Context) {
 	})
 }
 
+func queryAirValue(c *gin.Context) {
+	liftMutex.Lock()
+	defer liftMutex.Unlock()
+
+	defer func() {
+		go waitSleepFlag()
+	}()
+	setNeedSleepFlag()
+	cmd := "ATQ\r"
+	sinterval := c.DefaultQuery("interval", "1")
+	interval, err := strconv.Atoi(sinterval)
+	if err != nil {
+		interval = 1
+	}
+	sdelay := c.DefaultQuery("delay", "10")
+	ndelay, err := strconv.Atoi(sdelay)
+	if err != nil {
+		ndelay = 10
+	}
+	resp, err := sendSerialData(cmd, 3, interval, ndelay)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	value := strings.Replace(resp, "ATQ", "", -1)
+	value = strings.Replace(value, "OK", "", -1)
+	value = strings.Replace(value, "\r\n", "", -1)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "OK",
+		"message": resp,
+		"value":   value,
+	})
+}
+
 func listposition(c *gin.Context) {
 	liftMutex.Lock()
 	defer liftMutex.Unlock()
