@@ -457,12 +457,18 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfigV1() error {
 			FDLogger.Printf("   USB serial %s\n", port.SerialNumber)
 			var bch340 bool
 			if port.VID == "1a86" && port.PID == "7523" {
-				bch340 = true
+				usp.serialPower = port.Name
+				usp.PBaudRate = 9600
+				FDLogger.Printf("Found arduino: %s\n", port.Name)
+				bch340 = false
 			} else if port.VID == "0403" && port.PID == "6001" {
 				usp.serialLifting = port.Name
 				usp.LBaudRate = 115200
 				FDLogger.Printf("Found lifting: %s\n", port.Name)
-
+			} else if port.VID == "067B" && port.PID == "2303" {
+				usp.serialVoltage = port.Name
+				usp.LevelBRate = 9600
+				FDLogger.Printf("Found power supply: %s\n", port.Name)
 			}
 
 			if bch340 {

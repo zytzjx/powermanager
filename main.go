@@ -20,7 +20,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.5.13.0"
+const VERSION = "21.11.10.0"
 
 // var port io.ReadWriteCloser
 var (
@@ -136,7 +136,9 @@ func main() {
 	// 	usbserialList.serialLifting = "/dev/ttyS0"
 	// }
 	FDLogger.Println("lift port:" + usbserialList.serialLifting)
-	usbserialList.serialLifting = *liftport
+	if *liftport != "" {
+		usbserialList.serialLifting = *liftport
+	}
 	FDLogger.Println("after lift port:" + usbserialList.serialLifting)
 	if usbserialList.serialLifting != "" { // 115200 lifting,
 		if err := liftingserial.Open(usbserialList.serialLifting, usbserialList.LBaudRate); err != nil {
