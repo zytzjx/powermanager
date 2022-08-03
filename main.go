@@ -1,3 +1,4 @@
+//go:build go1.8
 // +build go1.8
 
 package main
@@ -20,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "21.11.10.0"
+const VERSION = "22.08.02.0"
 
 // var port io.ReadWriteCloser
 var (
@@ -200,6 +201,7 @@ func main() {
 		v3.GET("/green", greenLed)
 		v3.GET("/yellow", yellowLed)
 		v3.GET("/red", redLed)
+		v3.GET("/clean", cleanLed)
 	}
 	regexRouter := ginregex.New(router, nil)
 	regexRouter.GET("/\\d+", Power)

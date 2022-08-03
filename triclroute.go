@@ -25,10 +25,10 @@ func recvStatus() {
 
 	var re = regexp.MustCompile(`(?m)Key:\s*(\d),\s*(\d),\s*(\d)`)
 	// var str = `Key: 0, 5, 2`
-	for bexit {
+	for !bexit {
 		time.Sleep(10 * time.Microsecond)
 		resp, err := powerserial.ReadDataEnd(1)
-		if err != nil {
+		if err != nil && len(resp) < 5 {
 			continue
 		}
 		FDLogger.Printf("cmd resp: %s\n", resp)
@@ -43,6 +43,10 @@ func recvStatus() {
 				fmt.Println(match)
 			}
 			// write redis
+			err = rdb.Set("tricoloredlight", sbstr[0], 0).Err()
+			if err != nil {
+				FDLogger.Println("set tricoloredlight failed:" + err.Error())
+			}
 		}
 	}
 }
@@ -114,4 +118,8 @@ func yellowLed(c *gin.Context) {
 
 func redLed(c *gin.Context) {
 	sendcmd("r", c)
+}
+
+func cleanLed(c *gin.Context) {
+	sendcmd("c", c)
 }
