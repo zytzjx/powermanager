@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "22.08.02.0"
+const VERSION = "22.08.08.0"
 
 // var port io.ReadWriteCloser
 var (
@@ -234,7 +234,8 @@ func main() {
 	case <-EXITPROC:
 		FDLogger.Println("http post Shutting down server...")
 	}
-	bexit = true
+	//bexit = true
+	quitrecv <- true
 	FDLogger.Println("Shutting down server...")
 
 	// The context is used to inform the server it has 5 seconds to finish

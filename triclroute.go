@@ -12,13 +12,15 @@ import (
 	"github.com/go-redis/redis"
 )
 
-var bexit = false
+//var bexit = false
+var quitrecv chan bool
 
 // var wgKeyStatus sync.WaitGroup
 
 // var ctx = context.Background()
 
 func recvStatus() {
+	quitrecv = make(chan bool)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
@@ -27,29 +29,36 @@ func recvStatus() {
 
 	var re = regexp.MustCompile(`(?m)Key:\s*(\d),\s*(\d),\s*(\d)`)
 	// var str = `Key: 0, 5, 2`
-	for !bexit {
-		time.Sleep(10 * time.Microsecond)
-		// wgKeyStatus.Wait()
-		resp, err := powerserial.ReadDataEnd(1)
-		if err != nil && len(resp) < 5 {
-			continue
-		}
-		FDLogger.Printf("cmd resp: %s\n", resp)
-		sbstr := re.FindStringSubmatch(resp)
-		if len(sbstr) == 4 {
-			// Publish a message.
-			err = rdb.Publish("tricoloredlight", sbstr[0]).Err()
-			if err != nil {
-				FDLogger.Println("publish failed:" + err.Error())
-				continue
-			}
-			for _, match := range sbstr {
-				fmt.Println(match)
-			}
-			// write redis
-			err = rdb.Set("tricoloredlight", sbstr[0], 0).Err()
-			if err != nil {
-				FDLogger.Println("set tricoloredlight failed:" + err.Error())
+	for {
+		select {
+		case <-quitrecv:
+			return
+		default:
+			{
+				time.Sleep(10 * time.Microsecond)
+				// wgKeyStatus.Wait()
+				resp, err := powerserial.ReadDataEnd(1)
+				if err != nil && len(resp) < 5 {
+					continue
+				}
+				FDLogger.Printf("cmd resp: %s\n", resp)
+				sbstr := re.FindStringSubmatch(resp)
+				if len(sbstr) == 4 {
+					// Publish a message.
+					err = rdb.Publish("tricoloredlight", sbstr[0]).Err()
+					if err != nil {
+						FDLogger.Println("publish failed:" + err.Error())
+						continue
+					}
+					for _, match := range sbstr {
+						fmt.Println(match)
+					}
+					// write redis
+					err = rdb.Set("tricoloredlight", sbstr[0], 0).Err()
+					if err != nil {
+						FDLogger.Println("set tricoloredlight failed:" + err.Error())
+					}
+				}
 			}
 		}
 	}
