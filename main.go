@@ -149,6 +149,7 @@ func main() {
 		defer liftingserial.Close()
 	}
 
+	quitrecv = make(chan bool)
 	go recvStatus()
 
 	gin.SetMode(gin.ReleaseMode)
@@ -235,7 +236,9 @@ func main() {
 		FDLogger.Println("http post Shutting down server...")
 	}
 	//bexit = true
-	quitrecv <- true
+	// FDLogger.Println("Shutting 2")
+	// quitrecv <- true
+	close(quitrecv)
 	FDLogger.Println("Shutting down server...")
 
 	// The context is used to inform the server it has 5 seconds to finish

@@ -17,6 +17,7 @@ import (
 
 	// "github.com/jacobsa/go-serial/serial"
 	//"github.com/tarm/serial"
+
 	"go.bug.st/serial"
 	"go.bug.st/serial/enumerator"
 )
@@ -173,6 +174,52 @@ func (sp *SerialPort) ReadDataLen(nTimeout int32) (string, error) {
 		return "", errret
 	case <-time.After(time.Duration(nTimeout) * time.Second):
 		return "", errors.New("recv data timeout")
+	}
+}
+
+//Read Data in go routine from usb port
+func (sp *SerialPort) ReadDataRoutine(resp chan string, errr chan error, exit chan bool) {
+	buf := make([]byte, 4096)
+	cnt := 0
+	for {
+		select {
+		case <-exit:
+			return
+		default:
+			{
+				time.Sleep(10 * time.Microsecond)
+				n, err := func() (int, error) {
+					// sp.mux.Lock()
+					// defer sp.mux.Unlock()
+					return sp.serialopen.Read(buf[cnt:])
+				}()
+
+				if err != nil {
+					FDLogger.Println("Error reading from serial port: ", err)
+					errr <- err
+					return
+				}
+				cnt += n
+				FDLogger.Println(hex.Dump(buf[0:cnt]))
+				bytesReader := bytes.NewReader(buf[0:cnt])
+				line := bufio.NewScanner(bytesReader)
+				line.Split(ScanItems)
+				var found bool
+				for line.Scan() {
+					s := line.Text()
+					FDLogger.Println(s)
+					if s == "OK" || s == "ERROR" {
+						found = true
+						break
+					}
+				}
+
+				if found || bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR")) {
+					resp <- string(buf[:cnt])
+				}
+			}
+		}
+
 	}
 }
 

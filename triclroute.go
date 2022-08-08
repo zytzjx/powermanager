@@ -20,7 +20,6 @@ var quitrecv chan bool
 // var ctx = context.Background()
 
 func recvStatus() {
-	quitrecv = make(chan bool)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
@@ -29,23 +28,29 @@ func recvStatus() {
 
 	var re = regexp.MustCompile(`(?m)Key:\s*(\d),\s*(\d),\s*(\d)`)
 	// var str = `Key: 0, 5, 2`
+	respChan := make(chan string)
+	errChan := make(chan error)
+	exit := make(chan bool)
+	go powerserial.ReadDataRoutine(respChan, errChan, exit)
 	for {
 		select {
 		case <-quitrecv:
+			exit <- true
 			return
 		default:
 			{
 				time.Sleep(10 * time.Microsecond)
 				// wgKeyStatus.Wait()
-				resp, err := powerserial.ReadDataEnd(1)
-				if err != nil && len(resp) < 5 {
-					continue
-				}
+				// resp, err := powerserial.ReadDataEnd(1)
+				// if err != nil && len(resp) < 5 {
+				// 	continue
+				// }
+				resp := <-respChan
 				FDLogger.Printf("cmd resp: %s\n", resp)
 				sbstr := re.FindStringSubmatch(resp)
 				if len(sbstr) == 4 {
 					// Publish a message.
-					err = rdb.Publish("tricoloredlight", sbstr[0]).Err()
+					err := rdb.Publish("tricoloredlight", sbstr[0]).Err()
 					if err != nil {
 						FDLogger.Println("publish failed:" + err.Error())
 						continue
