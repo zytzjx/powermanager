@@ -157,7 +157,7 @@ func main() {
 	router.GET("/", HomePage)
 	router.POST("/exitsystem", exit)
 	v1 := router.Group("/lift")
-	{
+	{ // for lifter PLC
 		v1.GET("/hello", hello)
 		v1.GET("/status", status)
 		v1.GET("/info", information)
@@ -191,13 +191,13 @@ func main() {
 		})
 	}
 	v2 := router.Group("/level")
-	{
+	{ // for Power Module
 		v2.GET("/voltage", voltage)
 		v2.GET("/poweron", poweron)
 		v2.GET("/poweroff", poweroff)
 	}
 	v3 := router.Group("/tricl")
-	{
+	{ // for arduino Module
 		v3.GET("/green", greenLed)
 		v3.GET("/yellow", yellowLed)
 		v3.GET("/red", redLed)

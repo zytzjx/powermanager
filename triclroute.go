@@ -14,6 +14,8 @@ import (
 
 var bexit = false
 
+// var wgKeyStatus sync.WaitGroup
+
 // var ctx = context.Background()
 
 func recvStatus() {
@@ -27,6 +29,7 @@ func recvStatus() {
 	// var str = `Key: 0, 5, 2`
 	for !bexit {
 		time.Sleep(10 * time.Microsecond)
+		// wgKeyStatus.Wait()
 		resp, err := powerserial.ReadDataEnd(1)
 		if err != nil && len(resp) < 5 {
 			continue
@@ -38,6 +41,7 @@ func recvStatus() {
 			err = rdb.Publish("tricoloredlight", sbstr[0]).Err()
 			if err != nil {
 				FDLogger.Println("publish failed:" + err.Error())
+				continue
 			}
 			for _, match := range sbstr {
 				fmt.Println(match)
