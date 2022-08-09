@@ -21,7 +21,7 @@ import (
 )
 
 // VERSION is software version
-const VERSION = "22.08.08.0"
+const VERSION = "22.08.09.0"
 
 // var port io.ReadWriteCloser
 var (
@@ -117,6 +117,7 @@ func main() {
 	}
 
 	if usbserialList.serialPower != "" {
+		FDLogger.Println("Open arduino " + usbserialList.serialPower)
 		if err := powerserial.Open(usbserialList.serialPower, usbserialList.PBaudRate); err != nil {
 			FDLogger.Fatalf("open power control fail: %s\n", err)
 			return
@@ -125,6 +126,7 @@ func main() {
 	}
 
 	if usbserialList.serialVoltage != "" {
+		FDLogger.Println("Open Power Control " + usbserialList.serialVoltage)
 		if err := levelserial.Open(usbserialList.serialVoltage, usbserialList.LevelBRate); err != nil {
 			FDLogger.Fatalf("open voltage control fail: %s\n", err)
 			return

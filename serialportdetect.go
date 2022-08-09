@@ -493,43 +493,80 @@ func (usp *USBSERIALPORTS) LoadUSBDevsWithoutConfigV1() error {
 	if err != nil {
 		return err
 	}
+
 	if len(ports) < 3 {
 		FDLogger.Println("Not All serial ports found!")
 		return errors.New("not all serial ports found")
 	}
+	usbSerialcnt := 0
 	for _, port := range ports {
-		FDLogger.Printf("Found port: %s\n", port.Name)
 		if port.IsUSB {
-			FDLogger.Printf("   USB ID     %s:%s\n", port.VID, port.PID)
-			FDLogger.Printf("   USB serial %s\n", port.SerialNumber)
-			var bch340 bool
-			if port.VID == "1a86" && port.PID == "7523" {
-				usp.serialPower = port.Name
-				usp.PBaudRate = 9600
-				FDLogger.Printf("Found arduino: %s\n", port.Name)
-				bch340 = false
-			} else if port.VID == "0403" && port.PID == "6001" {
-				usp.serialLifting = port.Name
-				usp.LBaudRate = 115200
-				FDLogger.Printf("Found lifting: %s\n", port.Name)
-			} else if port.VID == "067B" && port.PID == "2303" {
-				usp.serialVoltage = port.Name
-				usp.LevelBRate = 9600
-				FDLogger.Printf("Found power supply: %s\n", port.Name)
-			}
+			usbSerialcnt += 1
+		}
+	}
+	bUseCom := usbSerialcnt == 2
+	if bUseCom {
+		for _, port := range ports {
+			FDLogger.Printf("Found port: %s\n", port.Name)
+			if port.IsUSB {
+				FDLogger.Printf("   USB ID     %s:%s\n", port.VID, port.PID)
+				FDLogger.Printf("   USB serial %s\n", port.SerialNumber)
 
-			if bch340 {
-				if usp.serialVoltage == "" && IsVoltageController(port.Name, 9600) {
+				if port.VID == "1a86" && port.PID == "7523" {
+					usp.serialPower = port.Name
+					usp.PBaudRate = 9600
+					FDLogger.Printf("Found arduino done: %s\n", port.Name)
+
+				} else if port.VID == "0403" && port.PID == "6001" {
+					usp.serialLifting = port.Name
+					usp.LBaudRate = 115200
+					FDLogger.Printf("Found lifting done: %s\n", port.Name)
+				} else if port.VID == "067B" && port.PID == "2303" {
 					usp.serialVoltage = port.Name
 					usp.LevelBRate = 9600
-					FDLogger.Printf("Found power supply: %s\n", port.Name)
-				} else {
+					FDLogger.Printf("Found power supply done: %s\n", port.Name)
+				}
+			} else {
+				usp.serialVoltage = port.Name
+				usp.LevelBRate = 9600
+				FDLogger.Printf("Found power supply done: %s\n", port.Name)
+			}
+		}
+	} else {
+		for _, port := range ports {
+			FDLogger.Printf("Found port: %s\n", port.Name)
+			if port.IsUSB {
+				FDLogger.Printf("   USB ID     %s:%s\n", port.VID, port.PID)
+				FDLogger.Printf("   USB serial %s\n", port.SerialNumber)
+				bch340 := 0
+				if port.VID == "1a86" && port.PID == "7523" {
 					usp.serialPower = port.Name
 					usp.PBaudRate = 9600
 					FDLogger.Printf("Found arduino: %s\n", port.Name)
+					bch340 += 1
+				} else if port.VID == "0403" && port.PID == "6001" {
+					usp.serialLifting = port.Name
+					usp.LBaudRate = 115200
+					FDLogger.Printf("Found lifting done: %s\n", port.Name)
+				} else if port.VID == "067B" && port.PID == "2303" {
+					usp.serialVoltage = port.Name
+					usp.LevelBRate = 9600
+					FDLogger.Printf("Found power supply done: %s\n", port.Name)
 				}
-			}
 
+				if bch340 == 2 {
+					if usp.serialVoltage == "" && IsVoltageController(port.Name, 9600) {
+						usp.serialVoltage = port.Name
+						usp.LevelBRate = 9600
+						FDLogger.Printf("Found power supply done: %s\n", port.Name)
+					} else {
+						usp.serialPower = port.Name
+						usp.PBaudRate = 9600
+						FDLogger.Printf("Found arduino done: %s\n", port.Name)
+					}
+				}
+
+			}
 		}
 	}
 	return nil
