@@ -187,10 +187,9 @@ func (sp *SerialPort) ReadDataRoutine(resp chan string, errr chan error, exit ch
 			return
 		default:
 			{
-				time.Sleep(10 * time.Microsecond)
+				//time.Sleep(20 * time.Microsecond)
 				n, err := func() (int, error) {
-					// sp.mux.Lock()
-					// defer sp.mux.Unlock()
+
 					return sp.serialopen.Read(buf[cnt:])
 				}()
 
@@ -200,23 +199,46 @@ func (sp *SerialPort) ReadDataRoutine(resp chan string, errr chan error, exit ch
 					return
 				}
 				cnt += n
+				n = 0
 				FDLogger.Println(hex.Dump(buf[0:cnt]))
-				bytesReader := bytes.NewReader(buf[0:cnt])
-				line := bufio.NewScanner(bytesReader)
-				line.Split(ScanItems)
-				var found bool
-				for line.Scan() {
-					s := line.Text()
-					FDLogger.Println(s)
-					if s == "OK" || s == "ERROR" {
-						found = true
-						break
+				for {
+					okIndex := bytes.Index(buf[:cnt], []byte("OK\r\n"))
+					if okIndex != -1 {
+						resp <- string(buf[:okIndex])
+						buf = buf[okIndex+4:]
+						cnt -= okIndex + 4
+					} else {
+						errIndex := bytes.Index(buf[:cnt], []byte("ERROR\r\n"))
+						if errIndex != -1 {
+							resp <- string(buf[:errIndex])
+							buf = buf[errIndex+7:]
+							cnt -= errIndex + 7
+						} else {
+							break
+						}
 					}
-				}
 
-				if found || bytes.Contains(buf, []byte("OK")) || bytes.Contains(buf, []byte("ERROR")) {
-					resp <- string(buf[:cnt])
 				}
+				// bytesReader := bytes.NewReader(buf[0:cnt])
+				// line := bufio.NewScanner(bytesReader)
+				// line.Split(ScanItems)
+				// var found bool
+				// cntlen := 0
+				// for line.Scan() {
+				// 	s := line.Text()
+				// 	cntlen += len(s) + 2
+				// 	FDLogger.Println(s)
+				// 	if s == "OK" || s == "ERROR" {
+				// 		found = true
+				// 		break
+				// 	}
+				// }
+
+				// if found || bytes.Contains(buf, []byte("OK\r\n")) || bytes.Contains(buf, []byte("ERROR\r\n")) {
+				// 	resp <- string(buf[:cntlen])
+				// 	buf = buf[cntlen:]
+				// 	cnt -= cntlen
+				// }
 			}
 		}
 
