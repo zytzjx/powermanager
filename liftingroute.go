@@ -528,7 +528,7 @@ func SendATCmd(cmd string, c *gin.Context) {
 	if err != nil {
 		ndelay = 10
 		if strings.HasPrefix(cmd, "ATC") {
-			ndelay = 5000
+			ndelay = 15000
 		}
 	}
 	resp, err := sendSerialData(cmd, 10, interval, ndelay)

@@ -68,6 +68,10 @@ udevadm info -q path -n /dev/ttyUSB0
 * Get 
    all lift command can add interval=50 param, for example: http://localhost:8010/lift/hello?interval=30
    it means send one char sleep 30ms and send next. default is 1ms
+   http request paramter delay=10000(ms), means send data=>delay=>receive data: example:
+   ```
+   http://localhost:8010/lift/home?flag=3&delay=15000  
+   ```
 
 http://localhost:8010/lift/hello  
 Command: AT  
