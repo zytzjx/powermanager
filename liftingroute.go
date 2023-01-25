@@ -175,7 +175,13 @@ func information(c *gin.Context) {
 	if err != nil {
 		ndelay = 10
 	}
-	resp, err := sendSerialData(cmd, 6, interval, ndelay)
+	sTimeout := c.DefaultQuery("timeout", "6")
+	nTimeout, err := strconv.Atoi(sTimeout)
+	if err != nil {
+		nTimeout = 6
+	}
+
+	resp, err := sendSerialData(cmd, int32(nTimeout), interval, ndelay)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -344,6 +350,11 @@ func setPoisition(c *gin.Context) {
 	if err != nil {
 		ndelay = 10
 	}
+	sTimeout := c.DefaultQuery("timeout", "3")
+	nTimeout, err := strconv.Atoi(sTimeout)
+	if err != nil {
+		nTimeout = 3
+	}
 
 	if c.ShouldBindQuery(&pp) == nil {
 		val, err := strconv.ParseFloat(pp.Value, 64)
@@ -364,7 +375,8 @@ func setPoisition(c *gin.Context) {
 		FDLogger.Println(cmd)
 		FDLogger.Printf("len=%d\n", len(cmd))
 		// cmd = "ATP6=+370.00\r"
-		resp, err := sendSerialData(cmd, 3, interval, ndelay)
+
+		resp, err := sendSerialData(cmd, int32(nTimeout), interval, ndelay)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -402,7 +414,13 @@ func queryAirValue(c *gin.Context) {
 	if err != nil {
 		ndelay = 10
 	}
-	resp, err := sendSerialData(cmd, 3, interval, ndelay)
+	sTimeout := c.DefaultQuery("timeout", "3")
+	nTimeout, err := strconv.Atoi(sTimeout)
+	if err != nil {
+		nTimeout = 3
+	}
+
+	resp, err := sendSerialData(cmd, int32(nTimeout), interval, ndelay)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -445,7 +463,13 @@ func listposition(c *gin.Context) {
 	if err != nil {
 		ndelay = 10
 	}
-	resp, err := sendSerialData(cmd, 3, interval, ndelay)
+	sTimeout := c.DefaultQuery("timeout", "3")
+	nTimeout, err := strconv.Atoi(sTimeout)
+	if err != nil {
+		nTimeout = 3
+	}
+
+	resp, err := sendSerialData(cmd, int32(nTimeout), interval, ndelay)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -531,7 +555,12 @@ func SendATCmd(cmd string, c *gin.Context) {
 			ndelay = 15000
 		}
 	}
-	resp, err := sendSerialData(cmd, 10, interval, ndelay)
+	sTimeout := c.DefaultQuery("timeout", "10")
+	nTimeout, err := strconv.Atoi(sTimeout)
+	if err != nil {
+		nTimeout = 10
+	}
+	resp, err := sendSerialData(cmd, int32(nTimeout), interval, ndelay)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

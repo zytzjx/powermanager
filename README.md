@@ -72,6 +72,7 @@ udevadm info -q path -n /dev/ttyUSB0
    ```
    http://localhost:8010/lift/home?flag=3&delay=15000  
    ```
+   http request paramter timeout, means serial port read timeout. timeout=10, means 10s timeout
 
 http://localhost:8010/lift/hello  
 Command: AT  
